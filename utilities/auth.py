@@ -14,6 +14,17 @@ class Admin:
         self.lobby = None
         if not self.authenticate():
             raise Exception("CANNOT LOGIN")
+        self.update_header()
+        
+    def update_header(self):
+        if self.token:
+            self.header = {
+                "Content-Type" : "application/json",
+                "Authorization" : "Bearer "+self.token
+            }
+
+        if self.lobby:
+            self.lobby.update_header(self.header)
     
     def authenticate(self):
         if not self.token:
@@ -71,15 +82,12 @@ class Admin:
         }
 
 
-        header = {
-            "Content-Type" : "application/json",
-            "Authorization" : "Bearer "+self.token
-        }
 
-        response = requests.post(self.url+"api/collections/lobbies", json=payload, headers=header)
+
+        response = requests.post(self.url+"api/collections/lobbies", json=payload, headers=self.header)
         if response.status_code == 201:
             id = response.json()["id"]
-            self.lobby = Lobby(id)
+            self.lobby = Lobby(self.url, id, self.token)
             return True
         else:
             return False
