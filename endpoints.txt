@@ -1,0 +1,70 @@
+API Endpoints:
+--------------
+GET     /api/collections/question-sets                 - List questionsets
+POST    /api/collections/question-sets                 - Create a new questionset
+GET     /api/collections/question-sets/select-options  - List questionsets for select options
+GET     /api/collections/question-sets/{id}            - Get a single questionset
+PUT     /api/collections/question-sets/{id}            - Update an existing questionset (full replace)
+PATCH   /api/collections/question-sets/{id}            - Update an existing questionset (partial update)
+DELETE  /api/collections/question-sets/{id}            - Delete an existing questionset
+GET     /api/collections/questions                     - List questions
+POST    /api/collections/questions                     - Create a new question
+GET     /api/collections/questions/select-options      - List questions for select options
+GET     /api/collections/questions/{id}                - Get a single question
+PUT     /api/collections/questions/{id}                - Update an existing question (full replace)
+PATCH   /api/collections/questions/{id}                - Update an existing question (partial update)
+DELETE  /api/collections/questions/{id}                - Delete an existing question
+GET     /api/collections/answers                       - List answers
+POST    /api/collections/answers                       - Create a new answer
+GET     /api/collections/answers/select-options        - List answers for select options
+GET     /api/collections/answers/{id}                  - Get a single answer
+PUT     /api/collections/answers/{id}                  - Update an existing answer (full replace)
+PATCH   /api/collections/answers/{id}                  - Update an existing answer (partial update)
+DELETE  /api/collections/answers/{id}                  - Delete an existing answer
+GET     /api/collections/members                       - List members
+POST    /api/collections/members                       - Create a new member
+GET     /api/collections/members/select-options        - List members for select options
+GET     /api/collections/members/{id}                  - Get a single member
+PUT     /api/collections/members/{id}                  - Update an existing member (full replace)
+PATCH   /api/collections/members/{id}                  - Update an existing member (partial update)
+DELETE  /api/collections/members/{id}                  - Delete an existing member
+GET     /api/collections/member-answers                - List memberanswers
+POST    /api/collections/member-answers                - Create a new memberanswer
+GET     /api/collections/member-answers/select-options - List memberanswers for select options
+GET     /api/collections/member-answers/{id}           - Get a single memberanswer
+PUT     /api/collections/member-answers/{id}           - Update an existing memberanswer (full replace)
+PATCH   /api/collections/member-answers/{id}           - Update an existing memberanswer (partial update)
+DELETE  /api/collections/member-answers/{id}           - Delete an existing memberanswer
+GET     /api/collections/matches                       - List matches
+POST    /api/collections/matches                       - Create a new match
+GET     /api/collections/matches/select-options        - List matches for select options
+GET     /api/collections/matches/{id}                  - Get a single match
+PUT     /api/collections/matches/{id}                  - Update an existing match (full replace)
+PATCH   /api/collections/matches/{id}                  - Update an existing match (partial update)
+DELETE  /api/collections/matches/{id}                  - Delete an existing match
+GET     /api/collections/lobbies                       - List lobbies
+POST    /api/collections/lobbies                       - Create a new lobby
+GET     /api/collections/lobbies/select-options        - List lobbies for select options
+GET     /api/collections/lobbies/{id}                  - Get a single lobby
+PUT     /api/collections/lobbies/{id}                  - Update an existing lobby (full replace)
+PATCH   /api/collections/lobbies/{id}                  - Update an existing lobby (partial update)
+DELETE  /api/collections/lobbies/{id}                  - Delete an existing lobby
+GET     /api/collections/feedbacks                     - List feedbacks
+POST    /api/collections/feedbacks                     - Create a new feedback
+GET     /api/collections/feedbacks/select-options      - List feedbacks for select options
+GET     /api/collections/feedbacks/{id}                - Get a single feedback
+PUT     /api/collections/feedbacks/{id}                - Update an existing feedback (full replace)
+PATCH   /api/collections/feedbacks/{id}                - Update an existing feedback (partial update)
+DELETE  /api/collections/feedbacks/{id}                - Delete an existing feedback
+GET     /api/manifest                                  - Get the manifest
+GET     /api/manifest/entities/question-sets           - Get the questionset manifest
+GET     /api/manifest/entities/questions               - Get the question manifest
+GET     /api/manifest/entities/answers                 - Get the answer manifest
+GET     /api/manifest/entities/members                 - Get the member manifest
+GET     /api/manifest/entities/member-answers          - Get the memberanswer manifest
+GET     /api/manifest/entities/matches                 - Get the match manifest
+GET     /api/manifest/entities/lobbies                 - Get the lobby manifest
+GET     /api/manifest/entities/feedbacks               - Get the feedback manifest
+POST    /api/auth/admins/login                         - Login as a admin
+GET     /api/auth/admins/me                            - Get current admin
+--------------
