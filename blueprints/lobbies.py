@@ -1,26 +1,21 @@
-from flask import Blueprint, jsonify, current_app
-from .utils import make_api_request
+from flask import Blueprint, current_app, jsonify
+from .status_library import status_success, status_error
+from typing import cast
 
 lobbies_bp = Blueprint('lobbies', __name__)
 
-@lobbies_bp.route('/api/collections/lobbies', methods=['GET'])
-def list_lobbies():
-    """List all lobbies using the existing get_lobby method"""
-    admin = current_app.config['ADMIN']
-    try:
-        response = admin.get_lobby()
-        return response.json(), response.status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@lobbies_bp.route('/api/v0/lobbies/create', methods=['GET', 'POST'])
+def create_lobby():
+    #TODO: don't create lobby if one exists
+    info = {"name" : "test"}
+    manager = current_app.config["MANAGER"]
+    status, id = manager.create_lobby(info)
+    if status:
+        return jsonify(status_success(f"lobby created with id: {id}")), 201
+    else:
+        return jsonify(status_error("couldn't create lobby")), 500
+    
+#def delete_lobby():
 
-@lobbies_bp.route('/api/collections/lobbies/select-options', methods=['GET'])
-def select_options_lobbies():
-    """List lobbies for select options"""
-    admin = current_app.config['ADMIN']
-    return make_api_request(admin, "api/collections/lobbies/select-options")
 
-@lobbies_bp.route('/api/collections/lobbies/<id>', methods=['GET'])
-def get_lobby_by_id(id):
-    """Get a single lobby by ID"""
-    admin = current_app.config['ADMIN']
-    return make_api_request(admin, f"api/collections/lobbies/{id}")
+
