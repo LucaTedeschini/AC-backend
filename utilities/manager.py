@@ -9,21 +9,30 @@ class Manager:
         self.admin = Admin(url, email, password)
         self.lobby = None
 
+    def _make_api_request(self, method, endpoint, **kwargs):
+        """
+        Helper method to make authenticated API requests
+        """
+        url = self.url + endpoint
+        
+        @self.admin.token_required
+        def request_with_token(**request_kwargs):
+            return method(url, **request_kwargs)
+            
+        return request_with_token(**kwargs)
 
     def create_lobby(self, payload):
         #TODO: don't create lobby if one exists
-        #TODO: actually use real infos
 
-
-      
-
-
-        response = requests.post(self.url+"api/collections/lobbies", json=payload)
+        response = self._make_api_request(
+            requests.post,
+            "api/collections/lobbies",
+            json=payload
+        )
+        
         if response.status_code == 201:
-            id = response.json()["id"]
-            self.lobby = Lobby(self.url, id)
-            self.lobby.get_lobby_info()
-            return True, id
+            self.lobby = Lobby(self.url, response.json())
+            return True, self.lobby.id
         else:
             return False, -1
             

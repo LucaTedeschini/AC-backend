@@ -1,5 +1,4 @@
 Flask
-dotenv
-jsonify
+python-dotenv
 requests
-dateutils
+python-dateutil

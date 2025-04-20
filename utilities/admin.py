@@ -5,9 +5,6 @@ from functools import wraps
 
 class Admin:
     def __init__(self, url, email, password):
-        """
-        Instantiate a Admin object to handle admin authentication and token management.
-        """
         self.logger = Logger.get_logger() 
         self.logger.debug("Initializing Admin object with URL: %s, Email: %s", url, email)
         self.email = email
@@ -21,9 +18,6 @@ class Admin:
         self.update_header()
 
     def update_header(self):
-        """
-        Update the authorization header with the current token.
-        """
         if self.token:
             self.header = {
                 "Content-Type": "application/json",
@@ -34,9 +28,6 @@ class Admin:
             self.logger.warning("Token is not available. Header not updated.")
 
     def authenticate(self):
-        """
-        Authenticate the admin and retrieve a token.
-        """
         auth_url = self.url + "api/auth/admins/login"
         payload = {
             "email": self.email,
@@ -55,18 +46,45 @@ class Admin:
             return False
 
     def refresh_token(self):
-        """
-        Refresh the authentication token.
-        """
         self.logger.info("Attempting to refresh token for Admin with email: %s", self.email)
         return self.authenticate()
-
-    def before_request(self, func):
+        
+    def token_required(self, func):
         """
-        Decorator to add the authorization header to outgoing requests and handle token refresh if needed.
-        Retry up to a maximum number of times if the token is invalid.
+        A decorator that adds authorization header to requests and refreshes the token on 403 errors.
+        
+        Usage:
+        @admin.token_required
+        def my_api_request(url, **kwargs):
+            return requests.get(url, **kwargs)
         """
         @wraps(func)
         def wrapper(*args, **kwargs):
-            print("BEFORE REQUEST")
+            if 'headers' not in kwargs:
+                kwargs['headers'] = {}
+            
+            # Update headers with token if available
+            if self.header:
+                kwargs['headers'].update(self.header)
+            
+            # Execute the request
+            response = func(*args, **kwargs)
+            
+            # If unauthorized, try to refresh token and retry
+            if response.status_code == 403:
+                self.logger.warning("Got 403 Unauthorized, attempting to refresh token")
+                if self.refresh_token():
+                    self.logger.info("Token refreshed successfully, retrying request")
+                    # Update headers with new token
+                    if 'headers' not in kwargs:
+                        kwargs['headers'] = {}
+                    kwargs['headers'].update(self.header)
+                    
+                    # Retry the request
+                    return func(*args, **kwargs)
+                else:
+                    self.logger.error("Token refresh failed, request will likely fail")
+            
+            return response
         return wrapper
+

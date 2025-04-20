@@ -30,12 +30,6 @@ app.config['MANAGER'] = manager
 # Register all blueprints
 app.register_blueprint(lobbies_bp)
 
-@app.before_request
-def before_request_func():
-    """
-    Before request function to handle authentication and token management.
-    """
-    manager.admin.before_request(request)
 @app.route('/', methods=["GET"])
 def api_list():
     """Return API information"""
