@@ -12,6 +12,7 @@ class Manager:
         self.logger = Logger.get_logger("Manager")
         self.logger.info(f"Manager initialized with URL: {url}")
 
+    #TODO: pass to the requestWithToken method the same headers as the request
     def make_api_request(self, method, endpoint, **kwargs):
         """
         Helper method to make authenticated API requests

@@ -25,7 +25,6 @@ class ResourceBlueprint:
         self.url_prefix = url_prefix or Constants.endpoint_url(resource_type)
         self.manager_attr = manager_attr or resource_type
         self.logger = Logger.get_logger(f"{resource_type}_resource_blueprint")
-        self.logger.info(f"Initializing ResourceBlueprint for {resource_type}")
         
         # Create a Flask Blueprint for this resource
         self.blueprint = Blueprint(f'{resource_type}_bp', __name__)
@@ -39,7 +38,6 @@ class ResourceBlueprint:
     
     def _register_routes(self):
         """Register all standard RESTful routes for this resource."""
-        self.logger.info(f"Registering standard RESTful routes for {self.resource_type}")
         
         # GET /api/collections/{resource_type} - List resources
         @self.blueprint.route(self.url_prefix, methods=['GET'])

@@ -7,6 +7,13 @@ from utilities.manager import Manager
 
 # Import all blueprints
 from blueprints.lobbies import lobbies_bp
+from blueprints.answers import answers_bp
+from blueprints.question_sets import question_sets_bp
+from blueprints.questions import questions_bp
+from blueprints.members import members_bp
+from blueprints.matches import matches_bp
+from blueprints.feedback import feedbacks_bp
+from blueprints.member_answers import member_answers_bp
 
 
 load_dotenv()
@@ -29,6 +36,13 @@ app.config['MANAGER'] = manager
 
 # Register all blueprints
 app.register_blueprint(lobbies_bp)
+app.register_blueprint(answers_bp)
+app.register_blueprint(question_sets_bp)
+app.register_blueprint(questions_bp)
+app.register_blueprint(members_bp)
+app.register_blueprint(matches_bp)
+app.register_blueprint(feedbacks_bp)
+app.register_blueprint(member_answers_bp)
 
 @app.route('/', methods=["GET"])
 def api_list():

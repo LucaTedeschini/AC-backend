@@ -1,0 +1,14 @@
+### Answer API Tests
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### Fetch all answers
+GET {{baseUrl}}/api/v0/collections/answers/ HTTP/1.1
+
+### Test Case: Create a new answer
+POST {{baseUrl}}/api/v0/collections/answers/ HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "answer": "Test answer"
+}
