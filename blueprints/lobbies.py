@@ -1,15 +1,14 @@
 from flask import Blueprint, current_app, jsonify
 from .status_library import status_success, status_error
 from typing import cast
+from flask import request
 
 lobbies_bp = Blueprint('lobbies', __name__)
 
-@lobbies_bp.route('/api/v0/lobbies/create', methods=['GET', 'POST'])
+@lobbies_bp.route('/api/v0/lobbies/create', methods=['POST'])
 def create_lobby():
-    #TODO: don't create lobby if one exists
-    info = {"name" : "test"}
     manager = current_app.config["MANAGER"]
-    status, id = manager.create_lobby(info)
+    status, id = manager.create_lobby(request.json)
     if status:
         return jsonify(status_success(f"lobby created with id: {id}")), 201
     else:

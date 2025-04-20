@@ -10,8 +10,8 @@ class Lobby:
         self.status = None
         self.url = url+"api/collections/lobbies/"
     
-    def get_lobby_info(self, header):
-        response = requests.get(self.url+str(self.id), headers=header)
+    def get_lobby_info(self):
+        response = requests.get(self.url+str(self.id))
 
         
         dt = parser.isoparse(response.json()["creationDate"])

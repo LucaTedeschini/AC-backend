@@ -21,17 +21,21 @@ URL = os.environ.get("URL")
 #################################
 #           VARIABLES           #
 #################################
-admin = Manager(URL, os.environ.get("EMAIL"), os.environ.get("PASSWORD"))
+manager = Manager(URL, os.environ.get("EMAIL"), os.environ.get("PASSWORD"))
 app = Flask(__name__)
 
 # Add admin to the app configuration
-app.config['MANAGER'] = admin
+app.config['MANAGER'] = manager
 
 # Register all blueprints
 app.register_blueprint(lobbies_bp)
 
-
-
+@app.before_request
+def before_request_func():
+    """
+    Before request function to handle authentication and token management.
+    """
+    manager.admin.before_request(request)
 @app.route('/', methods=["GET"])
 def api_list():
     """Return API information"""
