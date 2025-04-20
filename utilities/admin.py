@@ -72,19 +72,24 @@ class Admin:
             
             # If unauthorized, try to refresh token and retry
             if response.status_code == 403:
-                self.logger.warning("Got 403 Unauthorized, attempting to refresh token")
-                if self.refresh_token():
-                    self.logger.info("Token refreshed successfully, retrying request")
-                    # Update headers with new token
-                    if 'headers' not in kwargs:
-                        kwargs['headers'] = {}
-                    kwargs['headers'].update(self.header)
-                    
-                    # Retry the request
-                    return func(*args, **kwargs)
-                else:
-                    self.logger.error("Token refresh failed, request will likely fail")
-            
+                max_retries = 5
+                n_try = 1
+                self.logger.warning(f"Got 403 Unauthorized, attempting to refresh token [{n_try}/{max_retries}]")
+                while not self.refresh_token():
+                    n_try += 1
+                    self.logger.warning(f"Got 403 Unauthorized, attempting to refresh token [{n_try}/{max_retries}]")
+                    if n_try > max_retries:
+                        raise Exception("Unable to refresh token")
+
+                self.logger.info("Token refreshed successfully, retrying request")
+                # Update headers with new token
+                if 'headers' not in kwargs:
+                    kwargs['headers'] = {}
+                kwargs['headers'].update(self.header)
+                
+                # Retry the request
+                return func(*args, **kwargs)
+
             return response
         return wrapper
 
