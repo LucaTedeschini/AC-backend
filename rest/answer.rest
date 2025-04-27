@@ -5,6 +5,9 @@
 ### Fetch all answers
 GET {{baseUrl}}/api/v0/collections/answers/ HTTP/1.1
 
+### Fetch answers with pagination and ordering
+GET {{baseUrl}}/api/v0/collections/answers?page=1&perPage=5&orderBy=id&order=DESC HTTP/1.1
+
 ### Test Case: Create a new answer
 POST {{baseUrl}}/api/v0/collections/answers/ HTTP/1.1
 Content-Type: {{contentType}}
@@ -12,3 +15,30 @@ Content-Type: {{contentType}}
 {
     "answer": "Test answer"
 }
+
+### Get answer select options
+GET {{baseUrl}}/api/v0/collections/answers/select-options HTTP/1.1
+
+### Get a single answer by ID
+GET {{baseUrl}}/api/v0/collections/answers/1 HTTP/1.1
+
+### Update an answer completely (PUT)
+PUT {{baseUrl}}/api/v0/collections/answers/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "answer": "Updated answer text",
+    "questionId": 1,
+    "memberId": 2
+}
+
+### Partially update an answer (PATCH)
+PATCH {{baseUrl}}/api/v0/collections/answers/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "answer": "Partially updated answer"
+}
+
+### Delete an answer
+DELETE {{baseUrl}}/api/v0/collections/answers/1 HTTP/1.1

@@ -1,0 +1,47 @@
+### Question API Tests
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### Fetch all questions
+GET {{baseUrl}}/api/v0/collections/questions/ HTTP/1.1
+
+### Fetch questions with pagination and ordering
+GET {{baseUrl}}/api/v0/collections/questions?page=1&perPage=5&orderBy=id&order=DESC HTTP/1.1
+
+### Fetch questions with relations
+GET {{baseUrl}}/api/v0/collections/questions?relations=answers HTTP/1.1
+
+### Test Case: Create a new question
+POST {{baseUrl}}/api/v0/collections/questions/ HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "question": "What is your favorite programming language?",
+    "answerIds": [1, 2]
+}
+
+### Get question select options
+GET {{baseUrl}}/api/v0/collections/questions/select-options HTTP/1.1
+
+### Get a single question by ID
+GET {{baseUrl}}/api/v0/collections/questions/1 HTTP/1.1
+
+### Update a question completely (PUT)
+PUT {{baseUrl}}/api/v0/collections/questions/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "question": "Updated question text",
+    "answerIds": [1]
+}
+
+### Partially update a question (PATCH)
+PATCH {{baseUrl}}/api/v0/collections/questions/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "answerIds": [1,2,3]
+}
+
+### Delete a question
+DELETE {{baseUrl}}/api/v0/collections/questions/1 HTTP/1.1

@@ -52,9 +52,18 @@ class ResourceBlueprint:
             manager = current_app.config["MANAGER"]
             try:
                 logger.debug(f"Making API request to get {self.resource_type} list")
+                
+                # Extract all query parameters from the request
+                params = {}
+                for key, value in request.args.items():
+                    params[key] = value
+                    
+                logger.debug(f"Query parameters: {params}")
+                
                 response = manager.make_api_request(
                     requests.get,
-                    f"api/collections/{self.resource_type}"
+                    f"api/collections/{self.resource_type}",
+                    params=params
                 )
                 
                 if response.status_code == 200:
@@ -119,9 +128,18 @@ class ResourceBlueprint:
             manager = current_app.config["MANAGER"]
             try:
                 logger.debug(f"Making API request to get {self.resource_type} select options")
+                
+                # Extract all query parameters from the request
+                params = {}
+                for key, value in request.args.items():
+                    params[key] = value
+                    
+                logger.debug(f"Query parameters: {params}")
+                
                 response = manager.make_api_request(
                     requests.get,
-                    f"api/collections/{self.resource_type}/select-options"
+                    f"api/collections/{self.resource_type}/select-options",
+                    params=params
                 )
                 
                 if response.status_code == 200:
@@ -147,9 +165,18 @@ class ResourceBlueprint:
             manager = current_app.config["MANAGER"]
             try:
                 logger.debug(f"Making API request to get {self.resource_type} {id}")
+                
+                # Extract all query parameters from the request
+                params = {}
+                for key, value in request.args.items():
+                    params[key] = value
+                    
+                logger.debug(f"Query parameters: {params}")
+                
                 response = manager.make_api_request(
                     requests.get,
-                    f"api/collections/{self.resource_type}/{id}"
+                    f"api/collections/{self.resource_type}/{id}",
+                    params=params
                 )
                 
                 if response.status_code == 200:
@@ -175,10 +202,19 @@ class ResourceBlueprint:
             manager = current_app.config["MANAGER"]
             try:
                 logger.debug(f"Making API request to update {self.resource_type} {id}")
+                
+                # Extract all query parameters from the request
+                params = {}
+                for key, value in request.args.items():
+                    params[key] = value
+                    
+                logger.debug(f"Query parameters: {params}")
+                
                 response = manager.make_api_request(
                     requests.put,
                     f"api/collections/{self.resource_type}/{id}",
-                    json=request.json
+                    json=request.json,
+                    params=params
                 )
                 
                 if response.status_code == 200:
@@ -204,10 +240,19 @@ class ResourceBlueprint:
             manager = current_app.config["MANAGER"]
             try:
                 logger.debug(f"Making API request to partially update {self.resource_type} {id}")
+                
+                # Extract all query parameters from the request
+                params = {}
+                for key, value in request.args.items():
+                    params[key] = value
+                    
+                logger.debug(f"Query parameters: {params}")
+                
                 response = manager.make_api_request(
                     requests.patch,
                     f"api/collections/{self.resource_type}/{id}",
-                    json=request.json
+                    json=request.json,
+                    params=params
                 )
                 
                 if response.status_code == 200:
@@ -233,9 +278,18 @@ class ResourceBlueprint:
             manager = current_app.config["MANAGER"]
             try:
                 logger.debug(f"Making API request to delete {self.resource_type} {id}")
+                
+                # Extract all query parameters from the request
+                params = {}
+                for key, value in request.args.items():
+                    params[key] = value
+                    
+                logger.debug(f"Query parameters: {params}")
+                
                 response = manager.make_api_request(
                     requests.delete,
-                    f"api/collections/{self.resource_type}/{id}"
+                    f"api/collections/{self.resource_type}/{id}",
+                    params=params
                 )
                 
                 if response.status_code in [200, 204]:
