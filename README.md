@@ -9,6 +9,23 @@ AC backend is a Flask-based API service that acts as a proxy to [another API ser
 docker build -t ac-backend .
 ```
 
+### Environment Selection
+
+The application can run in two modes:
+- **Development** (default): More verbose logging and detailed error messages
+- **Production**: Minimal logging and user-friendly error messages without sensitive details
+
+You can select the environment by setting the `FLASK_ENV` environment variable when running the container:
+```bash
+# For production environment
+docker run -e FLASK_ENV=production -p 5000:5000 ac-backend
+
+# For development environment (default)
+docker run -p 5000:5000 ac-backend
+# or explicitly:
+docker run -e FLASK_ENV=development -p 5000:5000 ac-backend
+```
+
 ### Set Up Environment Variables
 Create a `.env` file with your credentials:
 ```
@@ -18,6 +35,16 @@ PASSWORD=your-password
 ```
 
 ### Run the Container
+
+**Development Mode (Default)**
+```bash
+docker run -p 5000:5000 -v $(pwd)/.env:/app/.env ac-backend
+```
+
+**Production Mode**
+```bash
+docker run -p 5000:5000 -e FLASK_ENV=production -v $(pwd)/.env:/app/.env ac-backend
+```
 
 **Option 1: Using environment variables directly**
 ```bash
@@ -78,6 +105,11 @@ To give the container a name (useful for management):
 docker run -d -p 5000:5000 --name my-ac-backend -v C:\path\to\.env:/app/.env ac-backend
 ```
 
+To run the container in production mode:
+```bash
+docker run -d -p 5000:5000 --name ac-backend-prod -e FLASK_ENV=production -v C:\path\to\.env:/app/.env ac-backend
+```
+
 ### Container Management
 
 View running containers:
@@ -120,7 +152,23 @@ If you prefer to run the application directly without Docker:
    PASSWORD=your-password
    ```
 
-5. Run the application:
+5. Set environment variables for development or production:
+   - For development (default):
+     ```bash
+     # Windows
+     set FLASK_ENV=development
+     # Unix/MacOS
+     export FLASK_ENV=development
+     ```
+   - For production:
+     ```bash
+     # Windows
+     set FLASK_ENV=production
+     # Unix/MacOS
+     export FLASK_ENV=production
+     ```
+
+6. Run the application:
    ```bash
    flask run
    ```

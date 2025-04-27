@@ -18,8 +18,22 @@ COPY . .
 EXPOSE 5000
 
 # Define environment variables for Flask
+# Default to development, but allow override at runtime
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=development
 ENV PYTHONUNBUFFERED=1
 
-CMD ["flask", "run", "--host=0.0.0.0"]
+# Create startup scripts for different environments
+COPY --chmod=755 <<-"EOF" /start-dev.sh
+#!/bin/sh
+flask run --host=0.0.0.0 --debug
+EOF
+
+COPY --chmod=755 <<-"EOF" /start-prod.sh
+#!/bin/sh
+pip install gunicorn
+gunicorn --bind 0.0.0.0:5000 app:app
+EOF
+
+# Select appropriate startup script based on environment
+CMD ["/bin/sh", "-c", "if [ \"$FLASK_ENV\" = \"production\" ]; then /start-prod.sh; else /start-dev.sh; fi"]

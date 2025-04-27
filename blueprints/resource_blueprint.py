@@ -70,11 +70,13 @@ class ResourceBlueprint:
                     logger.info(f"Successfully retrieved {self.resource_type} list")
                     return jsonify(status_success(f"Retrieved {self.resource_type}", response.json())), 200
                 else:
-                    logger.error(f"Failed to retrieve {self.resource_type} list: {response.text}")
-                    return jsonify(status_error(f"Failed to retrieve {self.resource_type}: {response.text}")), response.status_code
+                    error_msg = f"Failed to retrieve {self.resource_type}"
+                    logger.error(f"{error_msg}: {response.text}")
+                    return jsonify(status_error(error_msg)), response.status_code
             except Exception as e:
-                logger.exception(f"Error retrieving {self.resource_type}: {str(e)}")
-                return jsonify(status_error(f"Error retrieving {self.resource_type}: {str(e)}")), 500
+                error_msg = f"Error retrieving {self.resource_type}"
+                logger.exception(f"{error_msg}: {str(e)}")
+                return jsonify(status_error(Logger.format_error_for_response(e))), 500
         
         # POST /api/collections/{resource_type} - Create a new resource
         @self.blueprint.route(self.url_prefix, methods=['POST'])
@@ -109,11 +111,13 @@ class ResourceBlueprint:
                     logger.info(f"Successfully created new {self.resource_type}")
                     return jsonify(status_success(f"Created new {self.resource_type}", response.json())), 201
                 else:
-                    logger.error(f"Failed to create {self.resource_type}: {response.text}")
-                    return jsonify(status_error(f"Failed to create {self.resource_type}: {response.text}")), response.status_code
+                    error_msg = f"Failed to create {self.resource_type}"
+                    logger.error(f"{error_msg}: {response.text}")
+                    return jsonify(status_error(error_msg)), response.status_code
             except Exception as e:
-                logger.exception(f"Error creating {self.resource_type}: {str(e)}")
-                return jsonify(status_error(f"Error creating {self.resource_type}: {str(e)}")), 500
+                error_msg = f"Error creating {self.resource_type}"
+                logger.exception(f"{error_msg}: {str(e)}")
+                return jsonify(status_error(Logger.format_error_for_response(e))), 500
         
         # GET /api/collections/{resource_type}/select-options - List resources for select options
         @self.blueprint.route(f"{self.url_prefix}/select-options", methods=['GET'])
@@ -146,11 +150,13 @@ class ResourceBlueprint:
                     logger.info(f"Successfully retrieved {self.resource_type} select options")
                     return jsonify(status_success(f"Retrieved {self.resource_type} select options", response.json())), 200
                 else:
-                    logger.error(f"Failed to retrieve {self.resource_type} select options: {response.text}")
-                    return jsonify(status_error(f"Failed to retrieve {self.resource_type} select options: {response.text}")), response.status_code
+                    error_msg = f"Failed to retrieve {self.resource_type} select options"
+                    logger.error(f"{error_msg}: {response.text}")
+                    return jsonify(status_error(error_msg)), response.status_code
             except Exception as e:
-                logger.exception(f"Error retrieving {self.resource_type} select options: {str(e)}")
-                return jsonify(status_error(f"Error retrieving {self.resource_type} select options: {str(e)}")), 500
+                error_msg = f"Error retrieving {self.resource_type} select options"
+                logger.exception(f"{error_msg}: {str(e)}")
+                return jsonify(status_error(Logger.format_error_for_response(e))), 500
         
         # GET /api/collections/{resource_type}/{id} - Get a single resource
         @self.blueprint.route(f"{self.url_prefix}/<id>", methods=['GET'])
@@ -183,11 +189,13 @@ class ResourceBlueprint:
                     logger.info(f"Successfully retrieved {self.resource_type} {id}")
                     return jsonify(status_success(f"Retrieved {self.resource_type} {id}", response.json())), 200
                 else:
-                    logger.error(f"Failed to retrieve {self.resource_type} {id}: {response.text}")
-                    return jsonify(status_error(f"Failed to retrieve {self.resource_type} {id}: {response.text}")), response.status_code
+                    error_msg = f"Failed to retrieve {self.resource_type} {id}"
+                    logger.error(f"{error_msg}: {response.text}")
+                    return jsonify(status_error(error_msg)), response.status_code
             except Exception as e:
-                logger.exception(f"Error retrieving {self.resource_type} {id}: {str(e)}")
-                return jsonify(status_error(f"Error retrieving {self.resource_type} {id}: {str(e)}")), 500
+                error_msg = f"Error retrieving {self.resource_type} {id}"
+                logger.exception(f"{error_msg}: {str(e)}")
+                return jsonify(status_error(Logger.format_error_for_response(e))), 500
         
         # PUT /api/collections/{resource_type}/{id} - Update an existing resource (full replace)
         @self.blueprint.route(f"{self.url_prefix}/<id>", methods=['PUT'])
@@ -221,11 +229,13 @@ class ResourceBlueprint:
                     logger.info(f"Successfully updated {self.resource_type} {id}")
                     return jsonify(status_success(f"Updated {self.resource_type} {id}", response.json())), 200
                 else:
-                    logger.error(f"Failed to update {self.resource_type} {id}: {response.text}")
-                    return jsonify(status_error(f"Failed to update {self.resource_type} {id}: {response.text}")), response.status_code
+                    error_msg = f"Failed to update {self.resource_type} {id}"
+                    logger.error(f"{error_msg}: {response.text}")
+                    return jsonify(status_error(error_msg)), response.status_code
             except Exception as e:
-                logger.exception(f"Error updating {self.resource_type} {id}: {str(e)}")
-                return jsonify(status_error(f"Error updating {self.resource_type} {id}: {str(e)}")), 500
+                error_msg = f"Error updating {self.resource_type} {id}"
+                logger.exception(f"{error_msg}: {str(e)}")
+                return jsonify(status_error(Logger.format_error_for_response(e))), 500
         
         # PATCH /api/collections/{resource_type}/{id} - Update an existing resource (partial update)
         @self.blueprint.route(f"{self.url_prefix}/<id>", methods=['PATCH'])
@@ -259,11 +269,13 @@ class ResourceBlueprint:
                     logger.info(f"Successfully partially updated {self.resource_type} {id}")
                     return jsonify(status_success(f"Partially updated {self.resource_type} {id}", response.json())), 200
                 else:
-                    logger.error(f"Failed to update {self.resource_type} {id}: {response.text}")
-                    return jsonify(status_error(f"Failed to update {self.resource_type} {id}: {response.text}")), response.status_code
+                    error_msg = f"Failed to update {self.resource_type} {id}"
+                    logger.error(f"{error_msg}: {response.text}")
+                    return jsonify(status_error(error_msg)), response.status_code
             except Exception as e:
-                logger.exception(f"Error updating {self.resource_type} {id}: {str(e)}")
-                return jsonify(status_error(f"Error updating {self.resource_type} {id}: {str(e)}")), 500
+                error_msg = f"Error updating {self.resource_type} {id}"
+                logger.exception(f"{error_msg}: {str(e)}")
+                return jsonify(status_error(Logger.format_error_for_response(e))), 500
         
         # DELETE /api/collections/{resource_type}/{id} - Delete an existing resource
         @self.blueprint.route(f"{self.url_prefix}/<id>", methods=['DELETE'])
@@ -296,11 +308,13 @@ class ResourceBlueprint:
                     logger.info(f"Successfully deleted {self.resource_type} {id}")
                     return jsonify(status_success(f"Deleted {self.resource_type} {id}")), 200
                 else:
-                    logger.error(f"Failed to delete {self.resource_type} {id}: {response.text}")
-                    return jsonify(status_error(f"Failed to delete {self.resource_type} {id}: {response.text}")), response.status_code
+                    error_msg = f"Failed to delete {self.resource_type} {id}"
+                    logger.error(f"{error_msg}: {response.text}")
+                    return jsonify(status_error(error_msg)), response.status_code
             except Exception as e:
-                logger.exception(f"Error deleting {self.resource_type} {id}: {str(e)}")
-                return jsonify(status_error(f"Error deleting {self.resource_type} {id}: {str(e)}")), 500
+                error_msg = f"Error deleting {self.resource_type} {id}"
+                logger.exception(f"{error_msg}: {str(e)}")
+                return jsonify(status_error(Logger.format_error_for_response(e))), 500
                 
     def override_route(self, route_name, handler):
         """Override a route handler with a custom implementation

@@ -3,7 +3,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Flask",
+            "name": "Python: Flask (Development)",
             "type": "debugpy",
             "request": "launch",
             "module": "flask",
@@ -13,7 +13,21 @@
             },
             "args": [
                 "run",
-                "--no-debugger"
+            ],
+            "jinja": true
+        },
+        {
+            "name": "Python: Flask (Production)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "gunicorn",
+            "env": {
+                "FLASK_APP": "app.py",
+                "FLASK_ENV": "production"
+            },
+            "args": [
+                "--bind=0.0.0.0:5000",
+                "app:app"
             ],
             "jinja": true
         }

@@ -54,6 +54,8 @@ def api_list():
     })
 
 
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Only use debug mode when directly running the script
+    # This ensures production deployments with Gunicorn don't show warnings
+    is_dev = os.environ.get("FLASK_ENV", "development") == "development"
+    app.run(debug=is_dev, host='0.0.0.0')
