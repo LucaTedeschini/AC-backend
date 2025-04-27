@@ -15,36 +15,19 @@ The application can run in two modes:
 - **Development** (default): More verbose logging and detailed error messages
 - **Production**: Minimal logging and user-friendly error messages without sensitive details
 
-You can select the environment by setting the `FLASK_ENV` environment variable when running the container:
-```bash
-# For production environment
-docker run -e FLASK_ENV=production -p 5000:5000 ac-backend
-
-# For development environment (default)
-docker run -p 5000:5000 ac-backend
-# or explicitly:
-docker run -e FLASK_ENV=development -p 5000:5000 ac-backend
-```
+You can select the environment by setting the `FLASK_ENV` environment variable in the `.env` file.
 
 ### Set Up Environment Variables
-Create a `.env` file with your credentials:
+Create a `.env` file with your credentials and the environment mode:
 ```
 URL=http://your-api-url/
 EMAIL=your-email@example.com
 PASSWORD=your-password
+FLASK_ENV=[production|development]
 ```
 
 ### Run the Container
 
-**Development Mode (Default)**
-```bash
-docker run -p 5000:5000 -v $(pwd)/.env:/app/.env ac-backend
-```
-
-**Production Mode**
-```bash
-docker run -p 5000:5000 -e FLASK_ENV=production -v $(pwd)/.env:/app/.env ac-backend
-```
 
 **Option 1: Using environment variables directly**
 ```bash
@@ -52,6 +35,7 @@ docker run -p 5000:5000 \
   -e URL=http://your-api-url/ \
   -e EMAIL=your-email@example.com \
   -e PASSWORD=your-password \
+  -e FLASK_ENV=[production|development] \
   ac-backend
 ```
 
@@ -60,22 +44,22 @@ docker run -p 5000:5000 \
 If your .env file is in the current directory:
 ```bash
 # Linux/macOS
-docker run -p 5000:5000 -v $(pwd)/.env:/app/.env ac-backend
+docker run -p 5000:5000 --env-file .env ac-backend
 
 # Windows Command Prompt
-docker run -p 5000:5000 -v %cd%\.env:/app/.env ac-backend
+docker run -p 5000:5000 --env-file .env ac-backend
 
 # Windows PowerShell
-docker run -p 5000:5000 -v ${PWD}\.env:/app/.env ac-backend
+docker run -p 5000:5000 --env-file .env ac-backend
 ```
 
 If your .env file is in a specific path:
 ```bash
 # Linux/macOS
-docker run -p 5000:5000 -v /absolute/path/to/.env:/app/.env ac-backend
+docker run -p 5000:5000 --env-file /absolute/path/to/.env ac-backend
 
 # Windows
-docker run -p 5000:5000 -v C:\path\to\.env:/app/.env ac-backend
+docker run -p 5000:5000 --env-file /absolute/path/to/.env ac-backend
 ```
 
 **For connecting to host services:**
@@ -92,22 +76,22 @@ docker run -p 5000:5000 \
 
 If your .env file is at `C:\Users\username\configs\.env`:
 ```bash
-docker run -p 5000:5000 -v C:\Users\username\configs\.env:/app/.env ac-backend
+docker run -p 5000:5000 --env-file C:\Users\username\configs\.env ac-backend
 ```
 
 To run the container in detached mode (background):
 ```bash
-docker run -d -p 5000:5000 -v C:\path\to\.env:/app/.env ac-backend
+docker run -d -p 5000:5000 --env-file C:\Users\username\configs\.env ac-backend
 ```
 
 To give the container a name (useful for management):
 ```bash
-docker run -d -p 5000:5000 --name my-ac-backend -v C:\path\to\.env:/app/.env ac-backend
+docker run -d -p 5000:5000 --name my-ac-backend --env-file C:\Users\username\configs\.env ac-backend
 ```
 
 To run the container in production mode:
 ```bash
-docker run -d -p 5000:5000 --name ac-backend-prod -e FLASK_ENV=production -v C:\path\to\.env:/app/.env ac-backend
+docker run -d -p 5000:5000 --name ac-backend-prod -e FLASK_ENV=production ---env-file C:\Users\username\configs\.env ac-backend
 ```
 
 ### Container Management
@@ -150,28 +134,18 @@ If you prefer to run the application directly without Docker:
    URL=http://your-api-url/
    EMAIL=your-email@example.com
    PASSWORD=your-password
+   FLASK_ENV=[production|development]
    ```
 
-5. Set environment variables for development or production:
-   - For development (default):
-     ```bash
-     # Windows
-     set FLASK_ENV=development
-     # Unix/MacOS
-     export FLASK_ENV=development
-     ```
-   - For production:
-     ```bash
-     # Windows
-     set FLASK_ENV=production
-     # Unix/MacOS
-     export FLASK_ENV=production
-     ```
 
-6. Run the application:
+5. Run the application:
    ```bash
    flask run
    ```
+
+   
+> [!WARNING]  
+> If the variable FLASK_ENV is set on production, the server will not run on windows due to missing dependencies
 
 ## API Documentation
 
