@@ -1,0 +1,11 @@
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+
+# Lobby Details (with Match) (GET)
+# INPUT: Member
+# - check if user is valid
+# - check if user is in lobby
+# - check if lobby exists
+# - check if match for this user on this lobby exists
+# OUTPUT: Lobby with Match or Error

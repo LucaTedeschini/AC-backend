@@ -1,0 +1,7 @@
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+
+###TODO Launch a scheduled job how???? that sends the answers to the ML instance
+
+###TODO add example for getting the Matches for the lobby

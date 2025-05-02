@@ -1,0 +1,38 @@
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+#TODO add to manifest the eager on relations in order to avoid ?relations=... on every request
+
+### Get the Lobby Info (in order to answer the questions)
+GET {{baseUrl}}/api/v0/collections/lobbies/2 HTTP/1.1
+
+
+### dldldl
+GET  {{baseUrl}}/api/v0/collections/member-answers/?relations=answer,member,question
+
+### Create the MemberAnswer
+POST {{baseUrl}}/api/v0/collections/member-answers/ HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "answerId": 1,
+    "memberId": 1,
+    "questionId": 1
+}
+
+# Join Lobby (POST)
+# INPUT: Member
+# - check if lobby exists
+# - check if lobby accepts new users (lobby full & invite time expired)
+# - check if user is valid
+# - check if user is already in lobby (already answered the questions)
+# OUTPUT: Lobby 
+# - check if MemberAnswer of the user associated with the lobby exists
+# - if all checks pass, return the updated lobby and add the user to the lobby
+# OUTPUT: Lobby Updated or Error
+
+# Quit Lobby (POST)
+# INPUT: Member
+# same as join
+# OUTPUT: Lobby Updated or Error
+

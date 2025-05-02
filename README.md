@@ -149,4 +149,4 @@ If you prefer to run the application directly without Docker:
 
 ## API Documentation
 
-For API documentation, visit `/api/docs` after starting the application.
+For API documentation, visit `/api` after starting the application.
