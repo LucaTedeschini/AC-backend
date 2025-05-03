@@ -1,0 +1,19 @@
+### Member API Tests
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### Fetch all members
+GET {{baseUrl}}/api/v0/collections/members/ HTTP/1.1
+
+### Fetch members with pagination and ordering
+GET {{baseUrl}}/api/v0/collections/members?page=1&perPage=5&orderBy=id&order=DESC HTTP/1.1
+
+### Test Case: Create a new member (check if userId is unique)
+POST {{baseUrl}}/api/v0/collections/members/ HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "name": "John Doe",
+    "userId": 1234,
+    "socialContact": "@johndoe"
+}

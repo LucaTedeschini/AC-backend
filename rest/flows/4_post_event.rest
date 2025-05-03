@@ -3,7 +3,6 @@
 
 
 ### Lobby Details (check if lobby is not disabled and event is finished)
-GET {{baseUrl}}/api/v0/collections/feedbacks/?relations=members HTTP/1.1
 
 ### If yes send the feedback
 POST {{baseUrl}}/api/v0/collections/feedbacks/ HTTP/1.1

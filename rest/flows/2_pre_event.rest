@@ -5,3 +5,4 @@
 ###TODO Launch a scheduled job how???? that sends the answers to the ML instance
 
 ###TODO add example for getting the Matches for the lobby
+GET {{baseUrl}}/api/v0/collections/lobbies/ HTTP/1.1
