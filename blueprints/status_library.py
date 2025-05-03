@@ -7,8 +7,9 @@ def status_success(message : str, data = None):
         response["data"] = data
     return response
 
-def status_error(message : str):
+def status_error(message : str, data = None):
     return {
         "status" : "error",
-        "message" : message
+        "message" : message,
+        (data is not None) and "data" : data
     }

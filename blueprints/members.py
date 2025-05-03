@@ -37,8 +37,9 @@ def _custom_create_member():
         if existing_members_response.status_code == 200:
             existing_members = existing_members_response.json()
             if existing_members['total'] > 0:
+                memberName = existing_members['data'][0]['name']
                 logger.warning(f"A member with userId {user_id} already exists")
-                return jsonify(status_error(f"A member with userId {user_id} already exists")), 409
+                return jsonify(status_error(f"A member with userId {user_id} already exists",memberName )), 409
         
         # If no existing member found, proceed with creating a new one
         response = manager.make_api_request(
