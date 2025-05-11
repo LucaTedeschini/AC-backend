@@ -4,8 +4,6 @@
 ### Get the Lobby Info (in order to answer the questions)
 GET {{baseUrl}}/api/v0/collections/lobbies HTTP/1.1
 
-
-
 ### Create the MemberAnswer
 POST {{baseUrl}}/api/v0/collections/member-answers/ HTTP/1.1
 Content-Type: {{contentType}}
@@ -14,6 +12,32 @@ Content-Type: {{contentType}}
     "answerId": 1,
     "memberId": 1,
     "questionId": 1
+}
+
+### Join Lobby - With specific lobby ID
+POST {{baseUrl}}/api/v0/collections/lobbies/join HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "memberId": 3,
+    "lobbyId": 7
+}
+
+### Join Lobby - Find active lobby automatically
+POST {{baseUrl}}/api/v0/collections/lobbies/join HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "memberId": 2
+}
+
+### Quit Lobby
+POST {{baseUrl}}/api/v0/collections/lobbies/quit HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "memberId": 1,
+    "lobbyId": 1
 }
 
 # Join Lobby (POST)

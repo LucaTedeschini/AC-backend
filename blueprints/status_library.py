@@ -8,8 +8,11 @@ def status_success(message : str, data = None):
     return response
 
 def status_error(message : str, data = None):
-    return {
+    retData = {
         "status" : "error",
-        "message" : message,
-        (data is not None) and "data" : data
+        "message" : message
     }
+
+    if (data is not None):
+        retData["data"] = data
+    return retData
