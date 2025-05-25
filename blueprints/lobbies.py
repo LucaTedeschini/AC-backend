@@ -1,10 +1,12 @@
 from flask import Blueprint, current_app, jsonify, request
+import requests # Add requests import back
 from .status_library import status_success, status_error
 from .resource_blueprint import ResourceBlueprint
 from utilities.log import Logger
 from utilities.lobby import Lobby
-import requests
-import time
+# Import the new lobby utilities
+from utilities.lobby_utilities import check_member_exists, check_lobby_exists, first_available_lobby, is_lobby_available, add_member_to_lobby
+import time # Keep time import if still used directly in this file, or move to utils if only used there
 
 # Create a ResourceBlueprint for lobbies
 lobbies_resource = ResourceBlueprint('lobbies')
@@ -60,70 +62,51 @@ def _custom_create_resource():
 # Override the default create_resource with our custom implementation
 lobbies_resource.override_route('create_resource', _custom_create_resource)
 
-# Define join lobby function - first implementation stage
+# Define join lobby function - refactored
 def join_lobby():
     logger = Logger.get_logger("lobbies_blueprint")
     manager = current_app.config["MANAGER"]
     logger.info("Handling request to join a lobby")
-    
+
     try:
-        # Get the payload from the request
         payload = request.json
         logger.debug(f"Join lobby payload: {payload}")
-        
-        # Check if memberId exists in the payload
-        if 'memberId' not in payload:
+
+        # Validate the memberId in the payload
+        member_id = payload.get('memberId')
+        if not member_id:
             logger.warning("memberId is required but not provided in the request")
             return jsonify(status_error("memberId is required")), 400
-            
-        member_id = payload['memberId']
         
-        # Check if lobbyId exists in the payload
-        if 'lobbyId' not in payload:
-            # If not provided, try to get the first active lobby
-            logger.info("lobbyId not provided, attempting to find an active lobby")
-            existing_lobbies_response = manager.make_api_request(
-                requests.get,
-                "api/collections/lobbies",
-                params={"status_neq": "disabled"}
-            )
-            
-            if existing_lobbies_response.status_code != 200 or existing_lobbies_response.json()['total'] == 0:
-                logger.warning("No active lobbies found")
-                return jsonify(status_error("No active lobbies found")), 404
-                
-            lobby_id = existing_lobbies_response.json()['data'][0]['id']
-            logger.info(f"Found active lobby with ID: {lobby_id}")
+        exists = check_member_exists(manager, member_id)
+        if not exists:
+            logger.warning(f"Member with ID {member_id} does not exist")
+            return jsonify(status_error("Member does not exist")), 404
+
+        # Validate the lobbyId in the payload
+        # If lobbyId is not provided, find the first available lobby, else check if the lobby provided exists and is available
+        lobby_id = payload.get('lobbyId')
+        lobby_data = None
+        if lobby_id:
+            lobby_data= check_lobby_exists(manager, lobby_id)
+            lobby_available = is_lobby_available(manager, lobby_data, member_id)
+            lobby_data = lobby_data if lobby_available else None
         else:
-            lobby_id = payload['lobbyId']
+            lobby_data = first_available_lobby(manager)
+            logger.info(f"Found active lobby with ID: {lobby_id}")
         
-        # 1. Check if the member exists
-        logger.info(f"Checking if member with ID {member_id} exists")
-        try:
-            member_response = manager.make_api_request(
-                requests.get,
-                f"api/collections/members/{member_id}"
-            )
-            
-            if member_response.status_code != 200:
-                logger.warning(f"Member with ID {member_id} not found. Status code: {member_response.status_code}")
-                return jsonify(status_error(f"Member with ID {member_id} not found")), 404
-                
-            member = member_response.json()
-            
-            # For now, just return success with the member information
-            # We'll implement the remaining checks in the next stage
-            return jsonify(status_success(f"Member {member_id} validation successful", {
-                "member": member,
-                "targetLobby": lobby_id
-            })), 200
-        except Exception as e:
-            logger.exception(f"Error when checking if member exists: {str(e)}")
-            return jsonify(status_error(f"Member with ID {member_id} not found")), 404
-            
+        if lobby_data:
+            updated_lobby = add_member_to_lobby(manager, lobby_data['id'], member_id)
+            return jsonify(status_success(f"Joined lobby with ID: {updated_lobby['id']}", data= updated_lobby)), 200
+        else:
+            logger.warning(f"Lobby with ID {lobby_id} does not exist or is not available")
+            return jsonify(status_error("Lobby does not exist or is not available")), 404
+
     except Exception as e:
         logger.exception(f"Exception occurred while joining lobby: {str(e)}")
-        return jsonify(status_error(Logger.format_error_for_response(e))), 500
+        # Use Logger.format_error_for_response if it exists and is appropriate
+        # For now, a generic error message.
+        return jsonify(status_error(f"An unexpected error occurred: {str(e)}")), 500
 
 # Register join_lobby as a route on our blueprint
 @lobbies_resource.register_additional_route('/api/v0/collections/lobbies/join', methods=['POST'])
