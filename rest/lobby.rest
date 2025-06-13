@@ -4,6 +4,8 @@
 
 ### Fetch all lobbies
 GET {{baseUrl}}/api/v0/collections/lobbies/ HTTP/1.1
+### Fetch all lobbies with members
+GET {{baseUrl}}/api/v0/collections/lobbies?relations=members HTTP/1.1
 ### Test Case: Create a new lobby with romantic match type
 POST {{baseUrl}}/api/v0/collections/lobbies/ HTTP/1.1
 Content-Type: {{contentType}}

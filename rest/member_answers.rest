@@ -1,0 +1,9 @@
+### Question API Tests
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### Fetch all member answers
+GET {{baseUrl}}/api/v0/collections/member-answers/ HTTP/1.1
+
+### Fetch all member answers with relations
+GET {{baseUrl}}/api/v0/collections/member-answers?member.id_eq=f3865f95-938f-410f-bf5a-4348142c30e9&question.id_in=d0dc14f1-6ad0-4174-99bb-aeae10c4d783,fbd6cfa7-452e-4b95-923c-e5800f19b99b HTTP/1.1

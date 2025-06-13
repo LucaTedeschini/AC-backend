@@ -1,0 +1,9 @@
+### Question API Tests
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### Fetch all questions-sets
+GET {{baseUrl}}/api/v0/collections/question-sets/ HTTP/1.1
+
+### Fetch a specific question-set
+GET {{baseUrl}}/api/v0/collections/question-sets/1 HTTP/1.1

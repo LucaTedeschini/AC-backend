@@ -5,7 +5,7 @@ from .resource_blueprint import ResourceBlueprint
 from utilities.log import Logger
 from utilities.lobby import Lobby
 # Import the new lobby utilities
-from utilities.lobby_utilities import check_member_exists, check_lobby_exists, first_available_lobby, is_lobby_available, add_member_to_lobby
+from utilities.lobby_utilities import check_member_exists, check_lobby_exists, first_available_lobby, is_lobby_available, add_member_to_lobby, quit_lobby
 import time # Keep time import if still used directly in this file, or move to utils if only used there
 
 # Create a ResourceBlueprint for lobbies
@@ -92,7 +92,7 @@ def join_lobby():
             lobby_available = is_lobby_available(manager, lobby_data, member_id)
             lobby_data = lobby_data if lobby_available else None
         else:
-            lobby_data = first_available_lobby(manager)
+            lobby_data = first_available_lobby(manager, member_id)
             logger.info(f"Found active lobby with ID: {lobby_id}")
         
         if lobby_data:
@@ -108,23 +108,63 @@ def join_lobby():
         # For now, a generic error message.
         return jsonify(status_error(f"An unexpected error occurred: {str(e)}")), 500
 
+def quit_lobby_wrapper():
+    logger = Logger.get_logger("lobbies_blueprint")
+    manager = current_app.config["MANAGER"]
+    logger.info("Handling request to quit a lobby")
+
+    try:
+        payload = request.json
+        logger.debug(f"Quit lobby payload: {payload}")
+
+        # Validate the memberId in the payload
+        member_id = payload.get('memberId')
+        if not member_id:
+            logger.warning("memberId is required but not provided in the request")
+            return jsonify(status_error("memberId is required")), 400
+        
+        exists = check_member_exists(manager, member_id)
+        if not exists:
+            logger.warning(f"Member with ID {member_id} does not exist")
+            return jsonify(status_error("Member does not exist")), 404
+
+        # Validate the lobbyId in the payload
+        lobby_id = payload.get('lobbyId')
+        if not lobby_id:
+            logger.warning("lobbyId is required but not provided in the request")
+            return jsonify(status_error("lobbyId is required")), 400
+        lobby_data = check_lobby_exists(manager, lobby_id)
+        if not lobby_data:
+            logger.warning(f"Lobby with ID {lobby_id} does not exist")
+            return jsonify(status_error("Lobby does not exist")), 404
+        # Check if the member is in the lobby
+        current_members = lobby_data.get('members', [])
+        if not any(member['id'] == member_id for member in current_members):
+            logger.warning(f"Member with ID {member_id} is not in the lobby {lobby_id}")
+            return jsonify(status_error("Member is not in the lobby")), 404
+        # Remove the member from the lobby
+        updated_lobby = quit_lobby(manager, lobby_id, member_id)
+        if updated_lobby:
+            logger.info(f"Member {member_id} has quit the lobby {lobby_id}")
+            return jsonify(status_success(f"Member {member_id} has quit the lobby {lobby_id}", data=updated_lobby)), 200
+        else:
+            logger.error(f"Failed to remove member {member_id} from lobby {lobby_id}")
+            return jsonify(status_error("Failed to remove member from lobby")), 500
+    except Exception as e:
+        logger.exception(f"Exception occurred while quitting lobby: {str(e)}")
+        # Use Logger.format_error_for_response if it exists and is appropriate
+        # For now, a generic error message.
+        return jsonify(status_error(f"An unexpected error occurred: {str(e)}")), 500
+
 # Register join_lobby as a route on our blueprint
 @lobbies_resource.register_additional_route('/api/v0/collections/lobbies/join', methods=['POST'])
 def join_lobby_route():
     return join_lobby()
 
-# Define quit lobby function - placeholder for now
-def quit_lobby():
-    logger = Logger.get_logger("lobbies_blueprint")
-    logger.info("Handling request to quit a lobby")
-    
-    # This is just a stub - we'll implement the full functionality later
-    return jsonify(status_success("Quit lobby endpoint - not yet implemented")), 200
-
 # Register quit_lobby as a route on our blueprint
 @lobbies_resource.register_additional_route('/api/v0/collections/lobbies/quit', methods=['POST'])
 def quit_lobby_route():
-    return quit_lobby()
+    return quit_lobby_wrapper()
 
 # Use the blueprint from the ResourceBlueprint
 lobbies_bp = lobbies_resource.blueprint
