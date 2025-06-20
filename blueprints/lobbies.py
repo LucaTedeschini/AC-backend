@@ -5,7 +5,7 @@ from .resource_blueprint import ResourceBlueprint
 from utilities.log import Logger
 from utilities.lobby import Lobby
 # Import the new lobby utilities
-from utilities.lobby_utilities import check_member_exists, check_lobby_exists, first_available_lobby, is_lobby_available, add_member_to_lobby, quit_lobby
+from blueprints.utilities.lobby_utilities import check_member_exists, check_lobby_exists, first_available_lobby, is_lobby_available, add_member_to_lobby, quit_lobby
 import time # Keep time import if still used directly in this file, or move to utils if only used there
 
 # Create a ResourceBlueprint for lobbies

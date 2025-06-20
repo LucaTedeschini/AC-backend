@@ -64,5 +64,71 @@ def _custom_create_member():
 # Override the default create_resource with our custom implementation
 members_resource.override_route('create_resource', _custom_create_member)
 
+def lobby_match_details(member_id=None):
+    logger = Logger.get_logger("members_blueprint")
+    manager = current_app.config["MANAGER"]
+    logger.info("Attempting to fetch lobby details for a member")
+
+    try:
+        # Get the member_id from the parameter or URL parameter
+        if not member_id:
+            member_id = request.view_args.get('memberId')
+        if not member_id:
+            logger.warning("memberId is required but not provided in the request")
+            return jsonify(status_error("memberId is required")), 400
+        
+        logger.info(f"Fetching lobby details for member with ID: {member_id}")        
+        # Fetch member with related lobbies and matches
+        response = manager.make_api_request(
+            requests.get,
+            f"api/collections/members?relations=lobbies,matches&userId_eq={member_id}"
+        )
+
+        if response.status_code != 200:
+            logger.error(f"Failed to fetch member data. Status code: {response.status_code}, Response: {response.text}")
+            return jsonify(status_error("Couldn't fetch member data")), 500
+
+        member_data = response.json()['data']
+        if not member_data:
+            logger.warning(f"No member found with userId {member_id}")
+            return jsonify(status_error("Member not found")), 404
+
+        member = member_data[0]
+
+        # Only check the first lobby (if any) for matches
+        matches = member['matches']
+        match = matches[0] if matches else None
+        if match:
+            logger.info(f"Found match with ID: {match['id']} for member with userId {member_id}")
+            response = manager.make_api_request(
+                requests.get,
+                f"api/collections/matches/{match['id']}?relations=members"
+            )
+            if response.status_code == 200:
+                match_data = response.json()
+                # lobby with match details
+                output = {
+                    "lobby": member['lobbies'][0] if member['lobbies'] else None,
+                    "match": match_data
+                }      
+                logger.info(f"Returning lobby and match details for member with userId {member_id}")
+                return jsonify(status_success(output)), 200
+            
+
+        logger.info(f"No lobbies found for member with userId {member_id}")
+        return jsonify(status_error("No lobbies or match found for this member")), 404
+
+        
+    except Exception as e:
+        logger.exception(f"Exception occurred while fetching lobby details: {str(e)}")
+        return jsonify(status_error(f"Error fetching lobby details: {str(e)}")), 500
+
+# Lobby details with Match for user
+@members_resource.register_additional_route('/api/v0/collections/members/<memberId>/lobbyMatch', methods=['GET'])
+def lobby_match_details_route(memberId):
+        return lobby_match_details(memberId)
+
+
+
 # Use the blueprint from the ResourceBlueprint
 members_bp = members_resource.blueprint
