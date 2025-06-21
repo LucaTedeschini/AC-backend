@@ -3,4 +3,4 @@
 
 
 ###Getting the Matches for the lobby
-GET {{baseUrl}}/api/v0/collections/matches?relations=members,lobby&lobby.id_eq=203de4be-47fc-4c87-b2b3-332aacba57da HTTP/1.1
+GET {{baseUrl}}/api/v0/collections/questions-with-match HTTP/1.1
