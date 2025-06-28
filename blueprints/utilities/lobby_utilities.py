@@ -94,11 +94,8 @@ def first_available_lobby(manager, member_id):
     if allLobbies_response.status_code == 200:
         all_lobbies = allLobbies_response.json().get('data', [])
         for lobby in all_lobbies:
-            try:
-                if is_lobby_available(manager, lobby, member_id):
-                    return lobby
-            except Exception:
-                continue  # Skip lobbies that are not available
+            if is_lobby_available(manager, lobby, member_id):
+                return lobby
     else:
         raise Exception(f"Failed to fetch lobbies: {allLobbies_response.text}")
     

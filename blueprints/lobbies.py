@@ -93,6 +93,7 @@ def join_lobby():
             lobby_data = lobby_data if lobby_available else None
         else:
             lobby_data = first_available_lobby(manager, member_id)
+            lobby_id = lobby_data['id']
             if not lobby_data:
                 logger.info("No available lobby found, creating a new one")
                 return jsonify(status_error("No available lobby found")), 404

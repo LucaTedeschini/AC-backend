@@ -9,9 +9,9 @@ POST {{baseUrl}}/api/v0/collections/member-answers/ HTTP/1.1
 Content-Type: {{contentType}}
 
 {
-    "answerId": 1,
-    "memberId": 1,
-    "questionId": 1
+    "answerId": "8468d5c2-ed92-450b-8f6a-52f9747dba58",
+    "memberId": "f911c704-a792-4016-aea1-de13d5a97f9d",
+    "questionId": "7fae40c2-96ce-4c94-a2f6-c5382fff84e1"
 }
 
 ### Join Lobby - With specific lobby ID
@@ -36,8 +36,8 @@ POST {{baseUrl}}/api/v0/collections/lobbies/quit HTTP/1.1
 Content-Type: {{contentType}}
 
 {
-    "memberId": "f3865f95-938f-410f-bf5a-4348142c30e9",
-    "lobbyId": "203de4be-47fc-4c87-b2b3-332aacba57da"
+    "memberId": "f911c704-a792-4016-aea1-de13d5a97f9d",
+    "lobbyId": "e013fda3-2949-4ec5-876f-727fba7e4566"
 }
 
 # Join Lobby (POST)
