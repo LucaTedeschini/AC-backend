@@ -64,6 +64,75 @@ def _custom_create_member():
 # Override the default create_resource with our custom implementation
 members_resource.override_route('create_resource', _custom_create_member)
 
+# Define a custom implementation for delete_member
+def _custom_delete_member(member_id):
+    logger = Logger.get_logger("members_blueprint")
+    manager = current_app.config["MANAGER"]
+    logger.info("Attempting to delete a member")
+    
+    try:
+        if not member_id:
+            logger.warning("Member ID is required but not provided in the request")
+            return jsonify(status_error("Member ID is required")), 400
+        
+        logger.info(f"Deleting member with ID: {member_id}")
+        
+        # First, fetch and delete all member answers for this member
+        logger.info(f"Fetching member answers for member ID: {member_id}")
+        member_answers_response = manager.make_api_request(
+            requests.get,
+            f"api/collections/member-answers?member.id_eq={member_id}"
+        )
+        
+        if member_answers_response.status_code == 200:
+            member_answers_data = member_answers_response.json()
+            member_answers = member_answers_data.get('data', [])
+            
+            if member_answers:
+                logger.info(f"Found {len(member_answers)} member answers to delete")
+                
+                # Delete each member answer
+                for answer in member_answers:
+                    answer_id = answer['id']
+                    logger.info(f"Deleting member answer with ID: {answer_id}")
+                    
+                    delete_answer_response = manager.make_api_request(
+                        requests.delete,
+                        f"api/collections/member-answers/{answer_id}"
+                    )
+                    
+                    if delete_answer_response.status_code != 200:
+                        logger.error(f"Failed to delete member answer {answer_id}. Status code: {delete_answer_response.status_code}")
+                        return jsonify(status_error(f"Failed to delete member answer {answer_id}")), 500
+                
+                logger.info(f"Successfully deleted all {len(member_answers)} member answers")
+            else:
+                logger.info("No member answers found for this member")
+        else:
+            logger.error(f"Failed to fetch member answers. Status code: {member_answers_response.status_code}")
+            return jsonify(status_error("Failed to fetch member answers")), 500
+        
+        # Now delete the member
+        logger.info(f"Proceeding to delete member with ID: {member_id}")
+        response = manager.make_api_request(
+            requests.delete,
+            f"api/collections/members/{member_id}"
+        )
+        
+        if response.status_code == 200:
+            logger.info(f"Successfully deleted member with ID: {member_id}")
+            return jsonify(status_success(f"Member and associated answers deleted successfully")), 200
+        else:
+            logger.error(f"Failed to delete member. Status code: {response.status_code}, Response: {response.text}")
+            return jsonify(status_error("Couldn't delete member")), 500
+            
+    except Exception as e:
+        logger.exception(f"Exception occurred while deleting member: {str(e)}")
+        return jsonify(status_error(f"Error deleting member: {str(e)}")), 500
+
+# Override the default delete_resource with our custom implementation
+members_resource.override_route('delete_resource', _custom_delete_member)
+
 def lobby_match_details(member_id=None):
     logger = Logger.get_logger("members_blueprint")
     manager = current_app.config["MANAGER"]

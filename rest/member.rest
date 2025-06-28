@@ -17,3 +17,7 @@ Content-Type: {{contentType}}
     "userId": 1234,
     "socialContact": "@johndoe"
 }
+
+### Then delete member
+DELETE {{baseUrl}}/api/v0/collections/members/4b38ab7f-fe55-42b8-94da-5dfd329f759b HTTP/1.1
+
