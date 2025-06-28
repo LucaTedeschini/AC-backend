@@ -49,6 +49,17 @@ def _custom_create_resource():
             manager.lobby = Lobby(manager.url, response.json())
             lobby_id = manager.lobby.id
             
+            # Schedule the new lobby with the scheduler
+            scheduler = current_app.config.get('SCHEDULER')
+            if scheduler:
+                try:
+                    scheduler.schedule_new_lobby(response.json())
+                    logger.info(f"Successfully scheduled new lobby {lobby_id}")
+                except Exception as e:
+                    logger.error(f"Failed to schedule new lobby {lobby_id}: {str(e)}")
+            else:
+                logger.warning("Scheduler not available, lobby not scheduled")
+            
             logger.info(f"Successfully created lobby with ID: {lobby_id}")
             return jsonify(status_success(f"lobby created with id: {lobby_id}")), 201
         else:
@@ -169,6 +180,47 @@ def join_lobby_route():
 @lobbies_resource.register_additional_route('/api/v0/collections/lobbies/quit', methods=['POST'])
 def quit_lobby_route():
     return quit_lobby_wrapper()
+
+# Register scheduler refresh route
+@lobbies_resource.register_additional_route('/api/v0/collections/lobbies/scheduler/refresh', methods=['POST'])
+def refresh_scheduler_route():
+    """Manually refresh the scheduler to fetch and schedule existing lobbies"""
+    logger = Logger.get_logger("lobbies_blueprint")
+    scheduler = current_app.config.get('SCHEDULER')
+    
+    if not scheduler:
+        logger.error("Scheduler not available")
+        return jsonify(status_error("Scheduler not available")), 500
+    
+    try:
+        logger.info("Manually refreshing scheduler")
+        scheduler.fetch_and_schedule_existing_lobbies()
+        status = scheduler.get_scheduler_status()
+        return jsonify(status_success("Scheduler refreshed successfully", data=status)), 200
+    except Exception as e:
+        logger.error(f"Error refreshing scheduler: {str(e)}")
+        return jsonify(status_error(f"Error refreshing scheduler: {str(e)}")), 500
+
+# Register cancel schedule route
+@lobbies_resource.register_additional_route('/api/v0/collections/lobbies/<lobby_id>/scheduler/cancel', methods=['DELETE'])
+def cancel_lobby_schedule_route(lobby_id):
+    """Cancel the scheduled job for a specific lobby"""
+    logger = Logger.get_logger("lobbies_blueprint")
+    scheduler = current_app.config.get('SCHEDULER')
+    
+    if not scheduler:
+        logger.error("Scheduler not available")
+        return jsonify(status_error("Scheduler not available")), 500
+    
+    try:
+        success = scheduler.cancel_lobby_schedule(lobby_id)
+        if success:
+            return jsonify(status_success(f"Cancelled schedule for lobby {lobby_id}")), 200
+        else:
+            return jsonify(status_error(f"No scheduled job found for lobby {lobby_id}")), 404
+    except Exception as e:
+        logger.error(f"Error cancelling schedule for lobby {lobby_id}: {str(e)}")
+        return jsonify(status_error(f"Error cancelling schedule: {str(e)}")), 500
 
 # Use the blueprint from the ResourceBlueprint
 lobbies_bp = lobbies_resource.blueprint

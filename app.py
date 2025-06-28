@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import requests
 from utilities.manager import Manager
+from utilities.scheduler import LobbyScheduler
 
 # Import all blueprints
 from blueprints.lobbies import lobbies_bp
@@ -34,6 +35,10 @@ app = Flask(__name__)
 # Add admin to the app configuration
 app.config['MANAGER'] = manager
 
+# Initialize and start the scheduler
+scheduler = LobbyScheduler(manager)
+app.config['SCHEDULER'] = scheduler
+
 # Register all blueprints
 app.register_blueprint(lobbies_bp)
 app.register_blueprint(answers_bp)
@@ -54,8 +59,25 @@ def api_list():
     })
 
 
-if __name__ == '__main__':
-    # Only use debug mode when directly running the script
-    # This ensures production deployments with Gunicorn don't show warnings
-    is_dev = os.environ.get("FLASK_ENV", "development") == "development"
-    app.run(debug=is_dev, host='0.0.0.0')
+@app.route('/api/v0/scheduler/status', methods=["GET"])
+def scheduler_status():
+    """Return scheduler status information"""
+    scheduler = app.config.get('SCHEDULER')
+    if scheduler:
+        return jsonify(scheduler.get_scheduler_status())
+    else:
+        return jsonify({
+            "running": False,
+            "error": "Scheduler not initialized"
+        }), 500
+
+
+    # Start the scheduler when the app starts
+scheduler = app.config.get('SCHEDULER')
+if scheduler:
+    scheduler.start()
+
+# Only use debug mode when directly running the script
+# This ensures production deployments with Gunicorn don't show warnings
+is_dev = os.environ.get("FLASK_ENV", "development") == "development"
+app.run(debug=is_dev, host='0.0.0.0')

@@ -3,3 +3,7 @@ python-dotenv
 requests
 python-dateutil
 gunicorn
+numpy
+scikit-learn
+scipy
+schedule==1.2.0
