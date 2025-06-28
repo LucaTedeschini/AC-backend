@@ -7,3 +7,12 @@ GET {{baseUrl}}/api/v0/collections/question-sets/ HTTP/1.1
 
 ### Fetch a specific question-set
 GET {{baseUrl}}/api/v0/collections/question-sets/1 HTTP/1.1
+
+### Upload a new question-set
+POST {{baseUrl}}/api/v0/collections/question-sets/ HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+    "name": "Question Set Name",
+    "questionIds": ["4f974ae0-5a97-4a7d-8b50-ed28515389a0"]
+}
