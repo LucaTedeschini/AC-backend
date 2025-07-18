@@ -20,13 +20,13 @@ Content-Type: {{contentType}}
     "eventType": "couple",
     "maxMembers": 2,
     "description": "Una serata romantica nel cuore di Milano",
-    "creationDate": "2024-03-20T18:00:00.000Z",
-    "preEventDate": "2024-03-20T18:00:00.000Z",
-    "eventDate": "2024-03-20T20:00:00.000Z",
-    "postEventDate": "2024-03-20T23:00:00.000Z",
+    "creationDate": "2025-07-18T13:15:00.000Z",
+    "preEventDate": "2025-07-18T13:51:00.000Z",
+    "eventDate": "2025-07-18T15:14:00.000Z",
+    "postEventDate": "2025-07-18T16:00:00.000Z",
     "inviteLink": "https://example.com/invite/milano-romantic",
     "questionSet": "3938b805-10d3-46eb-b4de-6e33e575bfec"
 }
 
 ### Remove a lobby
-DELETE {{baseUrl}}/api/v0/collections/lobbies/367f4c53-66dd-4cee-a856-c6bc3abdbc69 HTTP/1.1
+DELETE {{baseUrl}}/api/v0/collections/lobbies/28d84413-7bda-4cae-b546-b56f3981bf72 HTTP/1.1

@@ -4,6 +4,20 @@ import threading
 from datetime import datetime, timezone
 from utilities.log import Logger
 import requests
+# Import the matching algorithm
+import sys
+import os
+
+# Add the project root directory to the path to import from ml module
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+try:
+    from ml.MatchingAlgorithm import AlphaConnectMatcher
+except ImportError as e:
+    print(f"Warning: Could not import MatchingAlgorithm: {e}")
+    AlphaConnectMatcher = None
 
 
 class LobbyScheduler:
@@ -153,11 +167,170 @@ class LobbyScheduler:
                 print(f"🚀 PRE-EVENT FUNCTION EXECUTED for lobby {lobby_id}")
                 print(f"⏰ Triggered at: {datetime.now(timezone.utc)}")
                 print("-" * 50)
+            
+            # Execute matching algorithm
+            self._execute_matching_algorithm(lobby_id)
                 
             self.logger.info(f"Successfully executed pre-event function for lobby {lobby_id}")
                 
         except Exception as e:
             self.logger.error(f"Error executing pre-event function for lobby {lobby_id}: {str(e)}")
+
+    def _execute_matching_algorithm(self, lobby_id):
+        """Execute the matching algorithm for a specific lobby"""
+        try:
+            self.logger.info(f"🔥 Starting matching algorithm for lobby {lobby_id}")
+            
+            # Check if matching algorithm is available
+            if AlphaConnectMatcher is None:
+                self.logger.error("MatchingAlgorithm not available - import failed")
+                return
+            
+            # Step 1: Fetch questions with match data
+            questions_data = self._fetch_questions_with_match()
+            if not questions_data:
+                self.logger.warning(f"No questions data found for matching in lobby {lobby_id}")
+                return
+            
+            # Step 2: Initialize and run the matching algorithm
+            matcher = AlphaConnectMatcher(questions_data)
+            matches = matcher.create_matching()
+            
+            if not matches:
+                self.logger.warning(f"No matches generated for lobby {lobby_id}")
+                return
+            
+            self.logger.info(f"Generated {len(matches)} matches for lobby {lobby_id}")
+            
+            # Step 3: Only delete existing matches if new matches were generated
+            self._delete_existing_matches(lobby_id)
+            
+            # Step 4: Create new matches
+            self._create_new_matches(lobby_id, matches)
+            
+            self.logger.info(f"Successfully completed matching algorithm for lobby {lobby_id}")
+            
+        except Exception as e:
+            self.logger.error(f"Error executing matching algorithm for lobby {lobby_id}: {str(e)}")
+
+    def _fetch_questions_with_match(self):
+        """Fetch questions with match data by calling the questions logic directly"""
+        try:
+            self.logger.info("Fetching questions with match data using direct function logic")
+            
+            # Replicate the logic from questions_with_match_handler directly
+            # First, fetch all questions
+            self.logger.info("Fetching all questions")
+            questions_response = self.manager.make_api_request(
+                requests.get,
+                "api/collections/questions"
+            )
+
+            if questions_response.status_code != 200:
+                self.logger.error(f"Failed to fetch questions. Status code: {questions_response.status_code}")
+                return None
+
+            questions_data = questions_response.json()['data']
+            if not questions_data:
+                self.logger.warning("No questions found")
+                return None
+
+            # Combine questions with their member answers
+            questions_with_answers = []
+            for question in questions_data:
+                question_id = question['id']
+                
+                # Fetch member answers for this specific question
+                self.logger.info(f"Fetching member answers for question ID: {question_id}")
+                member_answers_response = self.manager.make_api_request(
+                    requests.get,
+                    f"api/collections/member-answers?relations=question&question.id_eq={question_id}"
+                )
+
+                member_answers = []
+                if member_answers_response.status_code == 200:
+                    member_answers = member_answers_response.json()['data']
+                else:
+                    self.logger.warning(f"Failed to fetch member answers for question {question_id}. Status code: {member_answers_response.status_code}")
+
+                question_with_answers = {
+                    "question": question,
+                    "member_answers": member_answers
+                }
+                questions_with_answers.append(question_with_answers)
+
+            self.logger.info(f"Successfully retrieved {len(questions_with_answers)} questions with their member answers")
+            return {"data": questions_with_answers}
+                
+        except Exception as e:
+            self.logger.error(f"Error fetching questions with match data: {str(e)}")
+            return None
+
+    def _delete_existing_matches(self, lobby_id):
+        """Delete all existing matches for a specific lobby"""
+        try:
+            self.logger.info(f"Deleting existing matches for lobby {lobby_id}")
+            
+            # Query for existing matches
+            matches_response = self.manager.make_api_request(
+                requests.get,
+                f"api/collections/matches?relations=lobby&lobby.id_eq={lobby_id}"
+            )
+            
+            if matches_response.status_code == 200:
+                matches_data = matches_response.json().get('data', [])
+                self.logger.info(f"Found {len(matches_data)} existing matches to delete")
+                
+                # Delete each match
+                for match in matches_data:
+                    match_id = match['id']
+                    delete_response = self.manager.make_api_request(
+                        requests.delete,
+                        f"api/collections/matches/{match_id}"
+                    )
+                    
+                    if delete_response.status_code in [200, 204]:
+                        self.logger.info(f"Successfully deleted match {match_id}")
+                    else:
+                        self.logger.error(f"Failed to delete match {match_id}. Status code: {delete_response.status_code}")
+                        
+            elif matches_response.status_code == 404:
+                self.logger.info(f"No existing matches found for lobby {lobby_id}")
+            else:
+                self.logger.error(f"Failed to fetch existing matches. Status code: {matches_response.status_code}")
+                
+        except Exception as e:
+            self.logger.error(f"Error deleting existing matches for lobby {lobby_id}: {str(e)}")
+
+    def _create_new_matches(self, lobby_id, matches):
+        """Create new matches in the database"""
+        try:
+            self.logger.info(f"Creating {len(matches)} new matches for lobby {lobby_id}")
+            
+            for i, (member1_id, member2_id, score) in enumerate(matches):
+                match_data = {
+                    "memberIds": [member1_id, member2_id],
+                    "lobbyId": lobby_id,
+                    "score": score
+                }
+                
+                create_response = self.manager.make_api_request(
+                    requests.post,
+                    "api/collections/matches",
+                    json=match_data
+                )
+                
+                if create_response.status_code == 201:
+                    match_result = create_response.json()
+                    match_id = match_result.get('id', 'unknown')
+                    self.logger.info(f"Successfully created match {i+1}/{len(matches)} (ID: {match_id}) between members {member1_id} and {member2_id}")
+                else:
+                    self.logger.error(f"Failed to create match between {member1_id} and {member2_id}. Status code: {create_response.status_code}")
+                    
+            self.logger.info(f"Successfully created all {len(matches)} matches for lobby {lobby_id}")
+            
+        except Exception as e:
+            self.logger.error(f"Error creating new matches for lobby {lobby_id}: {str(e)}")
             
     def schedule_new_lobby(self, lobby_data):
         """Schedule a newly created lobby"""
@@ -181,6 +354,62 @@ class LobbyScheduler:
                 
         except Exception as e:
             self.logger.error(f"Error scheduling new lobby {lobby_data.get('id', 'unknown')}: {str(e)}")
+            return False
+
+    def refresh_lobby_schedule(self, lobby_id):
+        """Refresh the schedule for a specific lobby (fetch latest data and reschedule)"""
+        try:
+            self.logger.info(f"Refreshing schedule for lobby {lobby_id}")
+            
+            # First, cancel any existing schedule for this lobby
+            self.cancel_lobby_schedule(lobby_id)
+            
+            # Fetch the latest lobby data
+            response = self.manager.make_api_request(
+                requests.get,
+                f"api/collections/lobbies/{lobby_id}?relations=questionSet.questions.answers"
+            )
+            
+            if response.status_code == 200:
+                lobby_data = response.json()
+                
+                # Schedule the lobby with updated data
+                success = self.schedule_new_lobby(lobby_data)
+                if success:
+                    self.logger.info(f"Successfully refreshed schedule for lobby {lobby_id}")
+                else:
+                    self.logger.info(f"Lobby {lobby_id} not scheduled (preEventDate may have passed)")
+                    
+                return success
+            elif response.status_code == 404:
+                self.logger.info(f"Lobby {lobby_id} not found - removing any existing schedule")
+                return False
+            else:
+                self.logger.error(f"Failed to fetch lobby {lobby_id} for refresh. Status code: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error refreshing schedule for lobby {lobby_id}: {str(e)}")
+            return False
+
+    def update_lobby_schedule(self, lobby_data):
+        """Update the schedule for a lobby when it's edited"""
+        try:
+            lobby_id = lobby_data.get('id')
+            if not lobby_id:
+                self.logger.warning("Cannot update lobby schedule - no lobby ID provided")
+                return False
+                
+            self.logger.info(f"Updating schedule for edited lobby {lobby_id}")
+            
+            # Cancel existing schedule
+            self.cancel_lobby_schedule(lobby_id)
+            
+            # Schedule with new data
+            return self.schedule_new_lobby(lobby_data)
+            
+        except Exception as e:
+            self.logger.error(f"Error updating schedule for lobby {lobby_data.get('id', 'unknown')}: {str(e)}")
             return False
             
     def cancel_lobby_schedule(self, lobby_id):

@@ -11,3 +11,10 @@ Content-Type: {{contentType}}
 
 ### Cancel schedule for a specific lobby (replace with actual lobby ID)
 DELETE {{baseUrl}}/api/v0/collections/lobbies/e013fda3-2949-4ec5-876f-727fba7e4566/scheduler/cancel HTTP/1.1
+
+
+### Test Questions Data Fetch
+GET {{baseUrl}}/api/v0/collections/test-questions-data HTTP/1.1
+
+### Test Matching Algorithm for Lobby
+POST {{baseUrl}}/api/v0/collections/lobbies/fcc81478-8e53-442b-8ed6-b8a4bde7eb54/test-matching HTTP/1.1

@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
+import json
 
 class AlphaConnectMatcher:
     def __init__(self, user_answers: dict):
@@ -39,7 +40,9 @@ class AlphaConnectMatcher:
         # Costruisci le coppie finali (indici originali)
         pairs = [(left_indices[i], right_indices[j]) for i, j in zip(row_ind, col_ind)]
 
-        pairs = [(self.users[el[0]], self.users[el[1]]) for el in pairs]
+        pairs = [(self.users[el[0]], self.users[el[1]], round(self.__get_disparity_value(self.users[el[0]], self.users[el[1]]), 3)) for el in pairs]
+
+        pairs = sorted(pairs, key=lambda x: x[2])
         return pairs
         
     def __generate_weight_matrix(self):
@@ -96,3 +99,18 @@ class AlphaConnectMatcher:
             sorted_user_answers[k] = [v for v in answer_dict.values()]
 
         return sorted_user_answers
+    
+    def __error_function(self, ans_1, ans_2):
+        error = 0
+        for i in range(len(ans_1)):
+            error += abs(ans_1[i] - ans_2[i])
+        return error
+
+    
+    def __get_disparity_value(self, user_id, user_id_2):
+        ans_1 = list(self.user_dataframe[user_id])
+        ans_2 = list(self.user_dataframe[user_id_2])
+        return self.__error_function(ans_1, ans_2)
+
+
+
