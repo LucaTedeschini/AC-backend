@@ -73,6 +73,144 @@ def _custom_create_resource():
 # Override the default create_resource with our custom implementation
 lobbies_resource.override_route('create_resource', _custom_create_resource)
 
+# Helper function to delete all matches associated with a lobby
+def _delete_lobby_matches(manager, lobby_id):
+    """Delete all matches associated with a specific lobby"""
+    logger = Logger.get_logger("lobbies_blueprint")
+    logger.info(f"Searching for matches associated with lobby {lobby_id}")
+    
+    # Query directly for matches filtering by lobby ID
+    matches_response = manager.make_api_request(
+        requests.get,
+        f"api/collections/matches?relations=lobby&lobby.id_eq={lobby_id}"
+    )
+    
+    if matches_response.status_code == 200:
+        matches_data = matches_response.json().get('data', [])
+        logger.info(f"Found {len(matches_data)} matches associated with lobby {lobby_id}")
+        
+        # Delete each match associated with this lobby
+        for match in matches_data:
+            match_id = match['id']
+            logger.info(f"Deleting match with ID: {match_id} for lobby {lobby_id}")
+            
+            delete_match_response = manager.make_api_request(
+                requests.delete,
+                f"api/collections/matches/{match_id}"
+            )
+            
+            if delete_match_response.status_code in [200, 204]:
+                logger.info(f"Successfully deleted match {match_id}")
+            else:
+                logger.error(f"Failed to delete match {match_id}. Status code: {delete_match_response.status_code}")
+                raise Exception(f"Failed to delete match {match_id}")
+    elif matches_response.status_code == 404:
+        # No matches found for this lobby, which is fine
+        logger.info(f"No matches found for lobby {lobby_id}")
+    else:
+        logger.error(f"Failed to fetch matches for lobby {lobby_id}. Status code: {matches_response.status_code}")
+        raise Exception(f"Failed to fetch matches for lobby {lobby_id}")
+
+# Helper function to remove lobby from members' lobby arrays
+def _remove_lobby_from_members(manager, lobby_id, members):
+    """Remove the lobby from all members' lobby arrays"""
+    logger = Logger.get_logger("lobbies_blueprint")
+    logger.info(f"Removing lobby {lobby_id} from {len(members)} members")
+    
+    for member in members:
+        member_id = member['id']
+        logger.info(f"Removing lobby {lobby_id} from member {member_id}")
+        
+        # Fetch the member with their current lobbies
+        member_response = manager.make_api_request(
+            requests.get,
+            f"api/collections/members/{member_id}?relations=lobbies"
+        )
+        
+        if member_response.status_code == 200:
+            member_data = member_response.json()
+            current_lobbies = member_data.get('lobbies', [])
+            
+            # Remove the lobby from the member's lobbies array
+            updated_lobbies = [lobby for lobby in current_lobbies if lobby['id'] != lobby_id]
+            
+            # Update the member with the new lobbies array using PATCH
+            update_response = manager.make_api_request(
+                requests.patch,
+                f"api/collections/members/{member_id}",
+                json={
+                    "lobbies": updated_lobbies
+                }
+            )
+            
+            if update_response.status_code == 200:
+                logger.info(f"Successfully removed lobby {lobby_id} from member {member_id}")
+            else:
+                logger.error(f"Failed to update member {member_id}. Status code: {update_response.status_code}")
+                raise Exception(f"Failed to update member {member_id}")
+        else:
+            logger.error(f"Failed to fetch member {member_id}. Status code: {member_response.status_code}")
+            raise Exception(f"Failed to fetch member {member_id}")
+
+# Define a custom implementation for delete_lobby
+def _custom_delete_lobby(lobby_id):
+    logger = Logger.get_logger("lobbies_blueprint")
+    manager = current_app.config["MANAGER"]
+    logger.info(f"Attempting to delete lobby with ID: {lobby_id}")
+    
+    try:
+        if not lobby_id:
+            logger.warning("Lobby ID is required but not provided in the request")
+            return jsonify(status_error("Lobby ID is required")), 400
+        
+        # First, check if the lobby exists
+        logger.info(f"Checking if lobby {lobby_id} exists")
+        lobby_data = check_lobby_exists(manager, lobby_id)
+        if not lobby_data:
+            logger.warning(f"Lobby with ID {lobby_id} does not exist")
+            return jsonify(status_error("Lobby does not exist")), 404
+        
+        # Get all members in the lobby
+        members = lobby_data.get('members', [])
+        logger.info(f"Found {len(members)} members in lobby {lobby_id}")
+        
+        # Step 1: Delete all matches associated with this lobby
+        _delete_lobby_matches(manager, lobby_id)
+        
+        # Step 2: Remove lobby from all members' lobby arrays
+        if members:
+            _remove_lobby_from_members(manager, lobby_id, members)
+        
+        # Cancel any scheduled jobs for this lobby
+        scheduler = current_app.config.get('SCHEDULER')
+        if scheduler:
+            try:
+                scheduler.cancel_lobby_schedule(lobby_id)
+                logger.info(f"Cancelled scheduled job for lobby {lobby_id}")
+            except Exception as e:
+                logger.warning(f"Failed to cancel scheduled job for lobby {lobby_id}: {str(e)}")
+        
+        # Finally, delete the lobby itself
+        logger.info(f"Proceeding to delete lobby with ID: {lobby_id}")
+        response = manager.make_api_request(
+            requests.delete,
+            f"api/collections/lobbies/{lobby_id}"
+        )
+        
+        if response.status_code in [200, 204]:
+            logger.info(f"Successfully deleted lobby {lobby_id}")
+            return jsonify(status_success(f"Deleted lobby {lobby_id}")), 200
+        else:
+            logger.error(f"Failed to delete lobby {lobby_id}. Status code: {response.status_code}, Response: {response.text}")
+            return jsonify(status_error(f"Failed to delete lobby {lobby_id}")), response.status_code
+            
+    except Exception as e:
+        logger.exception(f"Exception occurred while deleting lobby {lobby_id}: {str(e)}")
+        return jsonify(status_error(f"Error deleting lobby: {str(e)}")), 500
+
+# Override the default delete_resource with our custom implementation
+lobbies_resource.override_route('delete_resource', _custom_delete_lobby)
+
 # Define join lobby function - refactored
 def join_lobby():
     logger = Logger.get_logger("lobbies_blueprint")
