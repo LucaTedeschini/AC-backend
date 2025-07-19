@@ -5,7 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install build dependencies for Python packages that might require compilation
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev
+RUN apk add --no-cache --virtual .build-deps gcc g++ musl-dev libc-dev
 
 RUN pip install --no-cache-dir -r requirements.txt
 
