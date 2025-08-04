@@ -308,10 +308,14 @@ class LobbyScheduler:
             self.logger.info(f"Creating {len(matches)} new matches for lobby {lobby_id}")
             
             for i, (member1_id, member2_id, score) in enumerate(matches):
+                # Generate unique incremental number as string
+                match_number = str(i)
+                
                 match_data = {
                     "memberIds": [member1_id, member2_id],
                     "lobbyId": lobby_id,
-                    "score": score
+                    "score": score,
+                    "uniqueId": match_number
                 }
                 
                 create_response = self.manager.make_api_request(
