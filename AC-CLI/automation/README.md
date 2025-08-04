@@ -305,7 +305,7 @@ These automation tools are ideal for:
 ## Requirements
 
 - Python 3.7+
-- AC Backend server running on localhost:5000
+- AC Backend server running on 127.0.0.1:5000
 - Network connectivity to the backend API
 - `requests` library for API calls
 - `rich` library for enhanced UI (optional, use simple version if not available)
