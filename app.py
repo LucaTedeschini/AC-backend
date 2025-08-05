@@ -5,6 +5,8 @@ import os
 import requests
 from utilities.manager import Manager
 from utilities.scheduler import LobbyScheduler
+import time
+
 
 # Import all blueprints
 from blueprints.lobbies import lobbies_bp
@@ -25,7 +27,8 @@ load_dotenv()
 URL = "http://localhost:1111/"
 URL = os.environ.get("URL")
 
-
+# This workaround is needed so this docker project will certainly run after the manifest server is ready and running
+time.sleep(20)
 #################################
 #           VARIABLES           #
 #################################
