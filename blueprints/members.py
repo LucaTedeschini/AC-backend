@@ -112,6 +112,41 @@ def _custom_delete_member(member_id):
             logger.error(f"Failed to fetch member answers. Status code: {member_answers_response.status_code}")
             return jsonify(status_error("Failed to fetch member answers")), 500
         
+        # Second, fetch and delete all matches involving this member
+        logger.info(f"Fetching matches for member ID: {member_id}")
+        matches_response = manager.make_api_request(
+            requests.get,
+            f"api/collections/matches?relations=members&members.id_in={member_id}"
+        )
+        
+        if matches_response.status_code == 200:
+            matches_data = matches_response.json()
+            matches = matches_data.get('data', [])
+            
+            if matches:
+                logger.info(f"Found {len(matches)} matches to delete")
+                
+                # Delete each match
+                for match in matches:
+                    match_id = match['id']
+                    logger.info(f"Deleting match with ID: {match_id}")
+                    
+                    delete_match_response = manager.make_api_request(
+                        requests.delete,
+                        f"api/collections/matches/{match_id}"
+                    )
+                    
+                    if delete_match_response.status_code not in [200, 204]:
+                        logger.error(f"Failed to delete match {match_id}. Status code: {delete_match_response.status_code}")
+                        return jsonify(status_error(f"Failed to delete match {match_id}")), 500
+                
+                logger.info(f"Successfully deleted all {len(matches)} matches")
+            else:
+                logger.info("No matches found for this member")
+        else:
+            logger.error(f"Failed to fetch matches. Status code: {matches_response.status_code}")
+            return jsonify(status_error("Failed to fetch matches")), 500
+        
         # Now delete the member
         logger.info(f"Proceeding to delete member with ID: {member_id}")
         response = manager.make_api_request(
@@ -121,7 +156,7 @@ def _custom_delete_member(member_id):
         
         if response.status_code == 200:
             logger.info(f"Successfully deleted member with ID: {member_id}")
-            return jsonify(status_success(f"Member and associated answers deleted successfully")), 200
+            return jsonify(status_success(f"Member, associated answers, and matches deleted successfully")), 200
         else:
             logger.error(f"Failed to delete member. Status code: {response.status_code}, Response: {response.text}")
             return jsonify(status_error("Couldn't delete member")), 500
