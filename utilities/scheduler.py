@@ -267,19 +267,19 @@ class LobbyScheduler:
             return None
 
     def _delete_existing_matches(self, lobby_id):
-        """Delete all existing matches for a specific lobby"""
+        """Delete all existing matches in the system"""
         try:
-            self.logger.info(f"Deleting existing matches for lobby {lobby_id}")
+            self.logger.info(f"Deleting all existing matches in the system")
             
-            # Query for existing matches
+            # Query for all existing matches
             matches_response = self.manager.make_api_request(
                 requests.get,
-                f"api/collections/matches?relations=lobby&lobby.id_eq={lobby_id}"
+                "api/collections/matches"
             )
             
             if matches_response.status_code == 200:
                 matches_data = matches_response.json().get('data', [])
-                self.logger.info(f"Found {len(matches_data)} existing matches to delete")
+                self.logger.info(f"Found {len(matches_data)} total existing matches to delete")
                 
                 # Delete each match
                 for match in matches_data:
@@ -295,12 +295,12 @@ class LobbyScheduler:
                         self.logger.error(f"Failed to delete match {match_id}. Status code: {delete_response.status_code}")
                         
             elif matches_response.status_code == 404:
-                self.logger.info(f"No existing matches found for lobby {lobby_id}")
+                self.logger.info(f"No existing matches found in the system")
             else:
                 self.logger.error(f"Failed to fetch existing matches. Status code: {matches_response.status_code}")
                 
         except Exception as e:
-            self.logger.error(f"Error deleting existing matches for lobby {lobby_id}: {str(e)}")
+            self.logger.error(f"Error deleting all existing matches: {str(e)}")
 
     def _create_new_matches(self, lobby_id, matches):
         """Create new matches in the database"""
