@@ -161,6 +161,95 @@ def _delete_lobby_matches(manager, lobby_id):
         logger.error(f"Failed to fetch matches for lobby {lobby_id}. Status code: {matches_response.status_code}")
         raise Exception(f"Failed to fetch matches for lobby {lobby_id}")
 
+# Helper function to delete all existing matches in the system
+def _delete_existing_matches(manager):
+    """Delete all existing matches in the system"""
+    logger = Logger.get_logger("lobbies_blueprint")
+    logger.info("Deleting all existing matches in the system")
+    
+    # Query for all existing matches
+    matches_response = manager.make_api_request(
+        requests.get,
+        "api/collections/matches"
+    )
+    
+    if matches_response.status_code == 200:
+        matches_data = matches_response.json().get('data', [])
+        logger.info(f"Found {len(matches_data)} total existing matches to delete")
+        
+        # Delete each match
+        for match in matches_data:
+            match_id = match['id']
+            delete_response = manager.make_api_request(
+                requests.delete,
+                f"api/collections/matches/{match_id}"
+            )
+            
+            if delete_response.status_code in [200, 204]:
+                logger.info(f"Successfully deleted match {match_id}")
+            else:
+                logger.error(f"Failed to delete match {match_id}. Status code: {delete_response.status_code}")
+                raise Exception(f"Failed to delete match {match_id}")
+                
+    elif matches_response.status_code == 404:
+        logger.info("No existing matches found in the system")
+    else:
+        logger.error(f"Failed to fetch existing matches. Status code: {matches_response.status_code}")
+        raise Exception("Failed to fetch existing matches")
+
+# Helper function to delete member answers for lobby members
+def _delete_lobby_member_answers(manager, lobby_id):
+    """Delete all member answers for members of a specific lobby"""
+    logger = Logger.get_logger("lobbies_blueprint")
+    logger.info(f"Deleting member answers for all members of lobby {lobby_id}")
+    
+    # First, get all members of the lobby
+    members_response = manager.make_api_request(
+        requests.get,
+        f"api/collections/members?relations=lobbies&lobbies.id_in={lobby_id}"
+    )
+    
+    if members_response.status_code == 200:
+        members_data = members_response.json().get('data', [])
+        logger.info(f"Found {len(members_data)} members in lobby {lobby_id}")
+        
+        # For each member, delete their member answers
+        for member in members_data:
+            member_id = member['id']
+            logger.info(f"Deleting member answers for member {member_id}")
+            
+            # Get all member answers for this member
+            member_answers_response = manager.make_api_request(
+                requests.get,
+                f"api/collections/member-answers?member.id_eq={member_id}"
+            )
+            
+            if member_answers_response.status_code == 200:
+                member_answers_data = member_answers_response.json().get('data', [])
+                logger.info(f"Found {len(member_answers_data)} member answers for member {member_id}")
+                
+                # Delete each member answer
+                for answer in member_answers_data:
+                    answer_id = answer['id']
+                    delete_answer_response = manager.make_api_request(
+                        requests.delete,
+                        f"api/collections/member-answers/{answer_id}"
+                    )
+                    
+                    if delete_answer_response.status_code in [200, 204]:
+                        logger.info(f"Successfully deleted member answer {answer_id}")
+                    else:
+                        logger.error(f"Failed to delete member answer {answer_id}. Status code: {delete_answer_response.status_code}")
+                        raise Exception(f"Failed to delete member answer {answer_id}")
+            else:
+                logger.warning(f"Failed to fetch member answers for member {member_id}. Status code: {member_answers_response.status_code}")
+                
+    elif members_response.status_code == 404:
+        logger.info(f"No members found for lobby {lobby_id}")
+    else:
+        logger.error(f"Failed to fetch members for lobby {lobby_id}. Status code: {members_response.status_code}")
+        raise Exception(f"Failed to fetch members for lobby {lobby_id}")
+
 # Helper function to remove lobby from members' lobby arrays
 def _remove_lobby_from_members(manager, lobby_id, members):
     """Remove the lobby from all members' lobby arrays"""
@@ -224,10 +313,13 @@ def _custom_delete_lobby(lobby_id):
         members = lobby_data.get('members', [])
         logger.info(f"Found {len(members)} members in lobby {lobby_id}")
         
-        # Step 1: Delete all matches associated with this lobby
-        _delete_lobby_matches(manager, lobby_id)
+        # Step 1: Delete all existing matches in the system
+        _delete_existing_matches(manager)
         
-        # Step 2: Remove lobby from all members' lobby arrays
+        # Step 2: Delete all member answers for lobby members
+        _delete_lobby_member_answers(manager, lobby_id)
+        
+        # Step 3: Remove lobby from all members' lobby arrays
         if members:
             _remove_lobby_from_members(manager, lobby_id, members)
         
