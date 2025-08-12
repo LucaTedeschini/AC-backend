@@ -250,6 +250,42 @@ def _delete_lobby_member_answers(manager, lobby_id):
         logger.error(f"Failed to fetch members for lobby {lobby_id}. Status code: {members_response.status_code}")
         raise Exception(f"Failed to fetch members for lobby {lobby_id}")
 
+# Helper function to delete member answers for a specific member
+def _delete_member_answers(manager, member_id):
+    """Delete all member answers for a specific member"""
+    logger = Logger.get_logger("lobbies_blueprint")
+    logger.info(f"Deleting member answers for member {member_id}")
+    
+    # Get all member answers for this member
+    member_answers_response = manager.make_api_request(
+        requests.get,
+        f"api/collections/member-answers?member.id_eq={member_id}"
+    )
+    
+    if member_answers_response.status_code == 200:
+        member_answers_data = member_answers_response.json().get('data', [])
+        logger.info(f"Found {len(member_answers_data)} member answers for member {member_id}")
+        
+        # Delete each member answer
+        for answer in member_answers_data:
+            answer_id = answer['id']
+            delete_answer_response = manager.make_api_request(
+                requests.delete,
+                f"api/collections/member-answers/{answer_id}"
+            )
+            
+            if delete_answer_response.status_code in [200, 204]:
+                logger.info(f"Successfully deleted member answer {answer_id}")
+            else:
+                logger.error(f"Failed to delete member answer {answer_id}. Status code: {delete_answer_response.status_code}")
+                raise Exception(f"Failed to delete member answer {answer_id}")
+                
+    elif member_answers_response.status_code == 404:
+        logger.info(f"No member answers found for member {member_id}")
+    else:
+        logger.error(f"Failed to fetch member answers for member {member_id}. Status code: {member_answers_response.status_code}")
+        raise Exception(f"Failed to fetch member answers for member {member_id}")
+
 # Helper function to remove lobby from members' lobby arrays
 def _remove_lobby_from_members(manager, lobby_id, members):
     """Remove the lobby from all members' lobby arrays"""
@@ -437,6 +473,15 @@ def quit_lobby_wrapper():
         if not any(member['id'] == member_id for member in current_members):
             logger.warning(f"Member with ID {member_id} is not in the lobby {lobby_id}")
             return jsonify(status_error("Member is not in the lobby")), 404
+        
+        # Delete all member answers for this member before quitting
+        try:
+            _delete_member_answers(manager, member_id)
+            logger.info(f"Successfully deleted member answers for member {member_id}")
+        except Exception as e:
+            logger.error(f"Failed to delete member answers for member {member_id}: {str(e)}")
+            # Continue with quitting the lobby even if answer deletion fails
+            
         # Remove the member from the lobby
         updated_lobby = quit_lobby(manager, lobby_id, member_id)
         if updated_lobby:
